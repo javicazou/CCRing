@@ -397,6 +397,76 @@ int main (int argc, char** argv)
         proc.undoTick (true);
         proc.undo();
         check (proc.getCurrentPresetName() == "Felt Upright" && proc.apvts.getRawParameterValue (IDs::aModel)->load() == aModel, "undo brings back the previous sound");
+        // DADO EN CADA NOTA: dos notas iguales seguidas suenan distinto; apagado, suenan igual
+        {
+            auto twoNotes = [&] (bool every)
+            {
+                proc.loadPreset (findPreset ("Init Ring"));
+                proc.apvts.getParameter (IDs::variation)->setValueNotifyingHost (0.0f);
+                auto setV = [&] (const char* id, float v) { auto* q = proc.apvts.getParameter (id); q->setValueNotifyingHost (q->convertTo0to1 (v)); };
+                setV (IDs::aExciter, 1.0f); setV (IDs::abMix, 0.0f); setV (IDs::life, 0.0f);   // golpe sin ruido: el mismo sonido da el mismo timbre
+                proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (every ? 1.0f : 0.0f);
+                proc.prepareToPlay (tsr, bs);
+                juce::AudioBuffer<float> b (2, bs), n1 (2, (int) tsr), n2 (2, (int) tsr);
+                for (int k = 0; k < 2; ++k)
+                {
+                    auto& dst = k == 0 ? n1 : n2;
+                    for (int pos = 0; pos + bs <= (int) tsr; pos += bs)
+                    {
+                        juce::MidiBuffer m;
+                        if (pos == 0) m.addEvent (juce::MidiMessage::noteOn (1, 60, 0.8f), 0);
+                        if (pos == (int) (0.5 * tsr) / bs * bs) m.addEvent (juce::MidiMessage::noteOff (1, 60), 0);
+                        proc.processBlock (b, m);
+                        for (int c = 0; c < 2; ++c) dst.copyFrom (c, pos, b, c, 0, bs);
+                    }
+                    juce::AudioBuffer<float> tail (2, bs);   // silencio entre las dos notas
+                    for (int t = 0; t < (int) (3.0 * tsr / bs); ++t) { juce::MidiBuffer m; proc.processBlock (tail, m); }
+                }
+                // distancia de timbre: espectros en 24 bandas (dB), diferencia media
+                auto bands = [&] (const juce::AudioBuffer<float>& x)
+                {
+                    juce::dsp::FFT fft (14);
+                    std::vector<float> d (2 * 16384, 0.0f);
+                    for (int i = 0; i < 16384; ++i) d[(size_t) i] = x.getSample (0, i) * (0.5f - 0.5f * std::cos (juce::MathConstants<float>::twoPi * i / 16384.0f));
+                    fft.performFrequencyOnlyForwardTransform (d.data());
+                    std::array<float, 24> b {};
+                    for (int k = 0; k < 24; ++k)
+                    {
+                        const double f0 = 60.0 * std::pow (2.0, k * 0.29), f1 = f0 * std::pow (2.0, 0.29);
+                        double sum = 1e-9; for (int i = (int) (f0 / tsr * 16384); i <= (int) (f1 / tsr * 16384); ++i) sum += d[(size_t) i] * d[(size_t) i];
+                        b[(size_t) k] = 10.0f * std::log10 ((float) sum);
+                    }
+                    float mx = -300; for (auto v : b) mx = std::max (mx, v);
+                    for (auto& v : b) v -= mx;   // timbre, no volumen
+                    return b;
+                };
+                const auto b1 = bands (n1), b2 = bands (n2);
+                float dist = 0; for (int k = 0; k < 24; ++k) dist += std::abs (std::max (-60.0f, b1[(size_t) k]) - std::max (-60.0f, b2[(size_t) k]));
+                return dist / 24.0f;
+            };
+            const float off = twoNotes (false), on = twoNotes (true);
+            std::cout << "DICE EVERY NOTE: timbre distance between two equal notes  off " << off << " dB, on " << on << " dB" << std::endl;
+            check (on > off * 2.0f && on > 10.0f, "DICE ON EVERY NOTE makes each note a different sound");
+            proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (0.0f);
+        }
+        {   // audio de ejemplo: secuenciador con un sonido nuevo en cada nota
+            DemoPlayHead ph; ph.bpm = 122.0;
+            proc.setPlayHead (&ph);
+            proc.loadPreset (findPreset ("Euclid Plonks"));
+            proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (1.0f);
+            proc.apvts.getParameter (IDs::seqOn)->setValueNotifyingHost (1.0f);
+            proc.prepareToPlay (tsr, bs);
+            juce::AudioBuffer<float> all (2, (int) (12.0 * tsr)), b (2, bs);
+            for (int pos = 0; pos + bs <= all.getNumSamples(); pos += bs)
+            { juce::MidiBuffer m; proc.processBlock (b, m); ph.ppq += bs * ph.bpm / (60.0 * tsr); for (int c = 0; c < 2; ++c) all.copyFrom (c, pos, b, c, 0, bs); }
+            all.applyGain (juce::Decibels::decibelsToGain (14.0f));
+            if (const float pk = all.getMagnitude (0, all.getNumSamples()); pk > 0.89f) all.applyGain (0.89f / pk);
+            auto f = outDir.getChildFile ("dado_en_cada_nota.wav"); f.deleteFile(); juce::WavAudioFormat fmt;
+            std::unique_ptr<juce::AudioFormatWriter> w (fmt.createWriterFor (new juce::FileOutputStream (f), tsr, 2, 24, {}, 0)); w->writeFromAudioSampleBuffer (all, 0, all.getNumSamples());
+            proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (0.0f);
+            proc.apvts.getParameter (IDs::seqOn)->setValueNotifyingHost (0.0f);
+            proc.setPlayHead (nullptr);
+        }
         // el dado no toca el secuenciador: apagado sigue apagado, prendido sigue sonando
         check (proc.apvts.getRawParameterValue (IDs::seqOn)->load() < 0.5f, "sequencer off stays off");
         {

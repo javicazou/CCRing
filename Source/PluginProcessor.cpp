@@ -141,6 +141,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout URingAudioProcessor::createP
     addFloat  (IDs::cMix,       "A/B - C Mix", { 0.0f, 1.0f }, 0.0f, pctText);
     addFloat  (IDs::cFeed,      "C to A Feed", { 0.0f, 1.0f }, 0.0f, pctText);
     addFloat  (IDs::cFeedB,     "C to B Feed", { 0.0f, 1.0f }, 0.0f, pctText);
+    addBool   (IDs::diceNote,   "Dice Every Note", false);
     addChoice (IDs::seq2Target, "Seq 2 Plays", { "Engine B", "Engine C", "B + C" }, 0);
     addChoice (IDs::seq2Follow, "Seq 2 Follow", { "Off", "Unison", "+3rd (m)", "+3rd (M)", "+4th", "+5th", "+Octave", "-Octave" }, 0);
     addFloat  (IDs::seqMutate, "Seq Mutate", { 0.0f, 1.0f }, 0.0f, pctText);
@@ -662,6 +663,7 @@ void URingAudioProcessor::computeVoiceParams (const float* mod)
     v.cMix        = get (IDs::cMix);
     v.cFeed       = get (IDs::cFeed);
     v.cFeedB      = get (IDs::cFeedB);
+    v.diceNote    = get (IDs::diceNote) > 0.5f;
     v.seq2Target  = (int) get (IDs::seq2Target);
 }
 

@@ -79,6 +79,7 @@ namespace IDs
     inline constexpr const char* cMix       = "cMix";
     inline constexpr const char* cFeed      = "cFeed";
     inline constexpr const char* cFeedB     = "cFeedB";     // 1.5: el motor C excita al motor B
+    inline constexpr const char* diceNote   = "diceNote";   // 1.5: DADO EN CADA NOTA
     inline constexpr const char* seq2Target = "seq2Target";
     // FX
     inline constexpr const char* glitchOn    = "glitchOn";

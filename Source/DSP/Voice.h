@@ -49,6 +49,7 @@ struct VoiceParams
     MacroParams c;
     float cPitch = 0.0f, cMix = 0.0f, cFeed = 0.0f;
     float cFeedB = 0.0f;   // C > B FEED: el motor C hace vibrar al objeto del motor B
+    bool diceNote = false; // DADO EN CADA NOTA: cada nota elige sus propios modelos y timbre al azar
     int seq2Target = 0;
 };
 
@@ -108,6 +109,20 @@ public:
 
         // VARIATION: desvíos aleatorios fijos para este golpe (bipolares, -1..1)
         for (auto& o : offsets) o = seedRng.nextFloat() * 2.0f - 1.0f;
+        // DADO EN CADA NOTA: esta nota sortea su propio instrumento (no toca a las que ya suenan)
+        diced = vp.diceNote;
+        if (diced)
+        {
+            auto u = [this] (float lo, float hi) { return lo + (hi - lo) * seedRng.nextFloat(); };
+            dice.aModel = seedRng.nextInt (7);   dice.aExc = seedRng.nextInt (5);
+            dice.bModel = seedRng.nextInt (12);  dice.bExc = seedRng.nextInt (4);
+            dice.cModel = seedRng.nextInt (24);
+            const int shape = seedRng.nextInt (3);   // A, B o mezcla
+            dice.abMix = shape == 0 ? u (0.0f, 0.15f) : shape == 1 ? u (0.85f, 1.0f) : u (0.3f, 0.7f);
+            dice.aStruct = u (0.05f, 0.85f); dice.aBright = u (0.2f, 0.85f); dice.aDamp = u (0.15f, 0.7f); dice.aPos = u (0.05f, 0.7f);
+            dice.bMat = u (0.1f, 0.9f); dice.bDecay = u (0.2f, 0.7f); dice.bTone = u (0.3f, 0.85f); dice.bPos = u (0.05f, 0.7f);
+            dice.cHarm = u (0.15f, 0.85f); dice.cTimbre = u (0.15f, 0.85f); dice.cMorph = u (0.15f, 0.85f);
+        }
         vel = juce::jlimit (0.05f, 1.0f, velocity * (1.0f + offsets[OVel] * vp.variation * 0.35f));
 
         // WIDTH: posición estéreo de esta voz
@@ -170,8 +185,9 @@ public:
         // EXCITER = ENGINE C: el motor C es el excitador del resonador A (se calcula aunque no se escuche)
         const bool cExcites = vp.a.exciter == ResExciter::EngineC;
         const bool cOn = (cAllowed && (gC > 0.0f || vp.cFeed > 0.0f || vp.cFeedB > 0.0f)) || cExcites;
-        const float mixA = gAB * (engineMask == 1 ? 1.0f : engineMask == 2 ? 0.0f : std::cos (vp.abMix * juce::MathConstants<float>::halfPi));
-        const float mixB = gAB * (engineMask == 2 ? 1.0f : engineMask == 1 ? 0.0f : std::sin (vp.abMix * juce::MathConstants<float>::halfPi));
+        const float abMix = diced ? dice.abMix : vp.abMix;
+        const float mixA = gAB * (engineMask == 1 ? 1.0f : engineMask == 2 ? 0.0f : std::cos (abMix * juce::MathConstants<float>::halfPi));
+        const float mixB = gAB * (engineMask == 2 ? 1.0f : engineMask == 1 ? 0.0f : std::sin (abMix * juce::MathConstants<float>::halfPi));
         const bool runA = mixA > 1.0e-4f, runB = mixB > 1.0e-4f;
         const bool runEngA = runA || (runB && vp.xfeed > 0.0f);
         const float cGain = gC * 0.9f;            // Plaits llega a la voz a unos -6 dB (calibrado con la prueba "audit")
@@ -271,12 +287,21 @@ private:
         auto vary = [v] (float base, float off, float amount) { return juce::jlimit (0.0f, 1.0f, base + off * v * amount); };
 
         ResParams a = vp.a;
+        ImpParams bDiced = vp.b;
+        if (diced)   // DADO EN CADA NOTA: el instrumento que sorteó esta nota
+        {
+            a.model = (ResModel) dice.aModel;
+            if (a.exciter != ResExciter::EngineC) a.exciter = (ResExciter) dice.aExc;
+            a.structure = dice.aStruct; a.brightness = dice.aBright; a.damping = dice.aDamp; a.position = dice.aPos;
+            bDiced.model = (ImpModel) dice.bModel; bDiced.exciter = (ImpExciter) dice.bExc;
+            bDiced.material = dice.bMat; bDiced.decay = dice.bDecay; bDiced.tone = dice.bTone; bDiced.position = dice.bPos;
+        }
         a.decayScale = vp.freeze ? 40.0f : 1.0f;
         a.position   = vary (a.position, offsets[OPosA], 0.35f);
         a.brightness = vary (a.brightness, offsets[OBright], 0.25f);
         a.damping    = vary (a.damping, offsets[ODampA], 0.15f);
 
-        ImpParams b = vp.b;
+        ImpParams b = bDiced;
         b.decayScale = vp.freeze ? 40.0f : 1.0f;
         b.position = vary (b.position, offsets[OPosB], 0.35f);
         b.tone     = vary (b.tone, offsets[OTone], 0.3f);
@@ -315,6 +340,7 @@ private:
             if (lockDest == VoiceParams::LockCTimbre)    addc (cp.timbre);
             if (lockDest == VoiceParams::LockCMorph)     addc (cp.morph);
         }
+        if (diced) { cp.model = dice.cModel; cp.harmonics = dice.cHarm; cp.timbre = dice.cTimbre; cp.morph = dice.cMorph; }
         if (modelOverride >= 0) cp.model = modelOverride;   // carril MODEL del secuenciador
         macro.set (base + vp.cPitch, cp);
         engA.update (midiToHz (base + vp.aPitch), a);
@@ -333,6 +359,10 @@ private:
     Svf filterCL, filterCR;
     float lock = 0.0f, drift = 0.0f;
     int lockDest = 0, modelOverride = -1;
+    bool diced = false;
+    struct Dice { int aModel = 0, aExc = 0, bModel = 0, bExc = 0, cModel = 0;
+                  float abMix = 0.5f, aStruct = 0.3f, aBright = 0.5f, aDamp = 0.4f, aPos = 0.3f,
+                        bMat = 0.4f, bDecay = 0.35f, bTone = 0.5f, bPos = 0.3f, cHarm = 0.5f, cTimbre = 0.5f, cMorph = 0.5f; } dice;
     float excAgc = 1.0f, aFollow = 0.0f;   // control de nivel del motor C como excitador
     Noise airNoise;
     ResonatorEngine engA;

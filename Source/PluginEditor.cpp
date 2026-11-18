@@ -775,6 +775,12 @@ void URingAudioProcessorEditor::timerCallback()
     lcd.setIdle (proc.getCurrentPresetName() + (proc.isPresetModified() ? " *" : ""), lcdWave.data(), (int) lcdWave.size());
     if (livePage.isVisible() && xyPad != nullptr) xyPad->refresh();
 
+    // Dado encendido = modo "un sonido nuevo en cada nota"
+    {
+        const bool everyNote = proc.apvts.getRawParameterValue (IDs::diceNote)->load() > 0.5f;
+        if (diceBtn.getToggleState() != everyNote) diceBtn.setToggleState (everyNote, juce::dontSendNotification);
+    }
+
     // LED del logo al tempo (cada 4 pasos del SEQ 1 = un tiempo en 1/16)
     {
         const int step = proc.sequencer.getCurrentStep();
@@ -1384,7 +1390,10 @@ void URingAudioProcessorEditor::showDiceMenu()
 {
     using mm::lang::tr;
     juce::PopupMenu m;
+    const bool everyNote = proc.apvts.getRawParameterValue (IDs::diceNote)->load() > 0.5f;
     m.addSectionHeader (tr ("RANDOM SOUND"));
+    m.addItem (20, tr ("A new sound on every note"), true, everyNote);
+    m.addSeparator();
     m.addItem (1, tr ("Everything (new sound)"));
     m.addItem (2, tr ("Engine A only"));
     m.addItem (3, tr ("Engine B only"));
@@ -1412,6 +1421,15 @@ void URingAudioProcessorEditor::showDiceMenu()
             case 12: rollDice (RS::RandEngineA, true); rollDice (RS::RandEngineB, true); break;
             case 13: rollDice (RS::RandEngineC, true); break;
             case 14: rollDice (RS::RandFx, true); break;
+            case 20:
+            {
+                auto* p = proc.apvts.getParameter (IDs::diceNote);
+                const bool on = p->getValue() < 0.5f;
+                p->beginChangeGesture(); p->setValueNotifyingHost (on ? 1.0f : 0.0f); p->endChangeGesture();
+                userActed = true;
+                lcd.setText (mm::lang::tr ("DICE ON EVERY NOTE"), on ? juce::String (mm::lang::tr ("ON: EVERY NOTE IS A NEW SOUND")) : juce::String ("OFF"));
+                break;
+            }
             default: break;
         }
     });
