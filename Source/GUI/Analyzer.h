@@ -395,18 +395,17 @@ public:
         drawModulePanel (g, card, {}, false, {}, Palette::accent);
         auto r = card.reduced (40.0f, 30.0f);
 
-        g.setColour (Palette::accent.withAlpha (0.35f));
-        g.fillEllipse (r.getX(), r.getY() + 8.0f, 22.0f, 22.0f);
-        g.setColour (Palette::accent);
-        g.fillEllipse (r.getX() + 5.0f, r.getY() + 13.0f, 12.0f, 12.0f);
+        // Logo de CCR (planeta) a la izquierda del nombre
+        static const auto logo = ImageCache::getFromMemory (URingFonts::ccr_logo_png, URingFonts::ccr_logo_pngSize);
+        g.drawImage (logo, Rectangle<float> (r.getX() - 6.0f, r.getY() - 6.0f, 92.0f, 54.0f), RectanglePlacement::centred);
         g.setColour (Palette::text);
         g.setFont (uiFont (34.0f).withExtraKerningFactor (0.25f));
-        g.drawText ("CCRING", r.withTrimmedLeft (34.0f).removeFromTop (40.0f), Justification::centredLeft);
+        g.drawText ("CCRING", r.withTrimmedLeft (96.0f).removeFromTop (40.0f), Justification::centredLeft);
         r.removeFromTop (44.0f);
         g.setColour (Palette::dim);
         g.setFont (uiFont (11.0f).withExtraKerningFactor (0.2f));
         g.drawText (String::fromUTF8 (mm::lang::spanish() ? "CCR   \xc2\xb7   VERSI\xc3\x93N " : "CCR   \xc2\xb7   VERSION ") + URING_VERSION,
-                    r.removeFromTop (18.0f), Justification::centredLeft);
+                    r.removeFromTop (18.0f).withTrimmedLeft (96.0f), Justification::centredLeft);
 
         // Idioma: ENGLISH / ESPAÑOL (se guarda para todas las ventanas de URing)
         g.setColour (Palette::dim);

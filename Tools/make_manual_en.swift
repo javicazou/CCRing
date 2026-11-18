@@ -2,6 +2,7 @@
 // Manual de CCRing en PDF (A4): capturas reales del plugin + texto. Solo usa frameworks de macOS.
 // Uso: make_manual <carpeta de capturas look_*.png> <Montserrat-Bold.ttf> <salida.pdf>
 import AppKit
+import ImageIO
 import CoreText
 import Foundation
 
@@ -10,6 +11,11 @@ guard args.count >= 4 else { print("uso: make_manual <capturas> <fuente.ttf> <sa
 let shots = URL(fileURLWithPath: args[1])
 CTFontManagerRegisterFontsForURL(URL(fileURLWithPath: args[2]) as CFURL, .process, nil)
 let outURL = URL(fileURLWithPath: args[3])
+let ccrLogo: CGImage? = {
+    let u = URL(fileURLWithPath: args[2]).deletingLastPathComponent().appendingPathComponent("ccr_logo.png")
+    guard let src = CGImageSourceCreateWithURL(u as CFURL, nil) else { return nil }
+    return CGImageSourceCreateImageAtIndex(src, 0, nil)
+}()
 
 let W: CGFloat = 595, H: CGFloat = 842, M: CGFloat = 40
 let bg = NSColor(calibratedRed: 0.055, green: 0.06, blue: 0.067, alpha: 1)
@@ -25,6 +31,7 @@ func bodyB(_ s: CGFloat) -> NSFont { NSFont(name: "HelveticaNeue-Bold", size: s)
 var mediaBox = CGRect(x: 0, y: 0, width: W, height: H)
 guard let ctx = CGContext(outURL as CFURL, mediaBox: &mediaBox, nil) else { print("no pude crear el PDF"); exit(1) }
 var pageNo = 0
+func drawLogo(_ r: CGRect) { if let l = ccrLogo { ctx.draw(l, in: r) } }
 
 // Texto con estilo simple: líneas que empiezan con "## " = subtítulo, "- " = viñeta, "**x**" = negrita al inicio
 func styled(_ src: String, size: CGFloat = 9.6) -> NSAttributedString {
@@ -110,7 +117,8 @@ func beginPage(_ title: String, _ kicker: String, colour: NSColor = orange) {
     line(kicker.uppercased(), font: mont(7.5), color: dim, at: CGPoint(x: M + 14, y: H - 70), kern: 1.4)
     // pie
     ctx.setFillColor(NSColor(calibratedWhite: 1, alpha: 0.08).cgColor); ctx.fill(CGRect(x: M, y: 34, width: W - 2 * M, height: 0.6))
-    line("CCRING 1.5  ·  CCR", font: mont(6.5), color: dim, at: CGPoint(x: M, y: 22), kern: 1.4)
+    drawLogo(CGRect(x: M, y: 16, width: 26, height: 15))
+    line("CCRING 1.5  ·  CCR", font: mont(6.5), color: dim, at: CGPoint(x: M + 32, y: 22), kern: 1.4)
     line("\(pageNo)", font: mont(7), color: dim, at: CGPoint(x: W - M - 8, y: 22))
 }
 func endPage() { ctx.endPDFPage() }
@@ -126,9 +134,8 @@ func columns(_ left: String, _ right: String, top: CGFloat, size: CGFloat = 9.6)
 pageNo += 1
 ctx.beginPDFPage(nil)
 ctx.setFillColor(bg.cgColor); ctx.fill(mediaBox)
-ctx.setFillColor(orange.withAlphaComponent(0.35).cgColor); ctx.fillEllipse(in: CGRect(x: M, y: H - 128, width: 34, height: 34))
-ctx.setFillColor(orange.cgColor); ctx.fillEllipse(in: CGRect(x: M + 8, y: H - 120, width: 18, height: 18))
-line("CCRING", font: mont(54), color: .white, at: CGPoint(x: M + 48, y: H - 130), kern: 12)
+drawLogo(CGRect(x: M - 6, y: H - 142, width: 100, height: 58))   // logo de CCR
+line("CCRING", font: mont(54), color: .white, at: CGPoint(x: M + 104, y: H - 130), kern: 12)
 line("MANUAL  ·  VERSION 1.5", font: mont(11), color: orange, at: CGPoint(x: M + 2, y: H - 162), kern: 3)
 line("Physical-modelling instrument + 24 synthesis models, with a sequencer built for minimal house", font: body(11.5), color: dim, at: CGPoint(x: M + 2, y: H - 182))
 drawShot("look_macro.png", top: 215)

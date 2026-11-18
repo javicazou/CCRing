@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/img/ccr_logo.png" alt="CCR" width="260"></p>
+
 # CCRing
 
 **Sintetizador de modelado físico, gratis y de código libre** — por CCR.

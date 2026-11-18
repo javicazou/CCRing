@@ -28,6 +28,7 @@ juce_add_plugin(CCRing
     PLUGIN_MANUFACTURER_CODE    Jvto
     PLUGIN_CODE                 Urng
     PRODUCT_NAME                "CCRing"
+    ICON_BIG                    "${CMAKE_CURRENT_SOURCE_DIR}/Resources/ccr_app_icon_1024.png"   # logo de CCR (app y bundles)
     FORMATS                     VST3 AU Standalone
     IS_SYNTH                    TRUE
     NEEDS_MIDI_INPUT            TRUE
@@ -76,7 +77,7 @@ endif()
 set_target_properties(mutable_plaits PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Tipografía: Montserrat Bold (SIL Open Font License, ver Resources/Montserrat-OFL.txt)
-juce_add_binary_data(URingFonts HEADER_NAME URingFonts.h NAMESPACE URingFonts SOURCES Resources/Montserrat-Bold.ttf)
+juce_add_binary_data(URingFonts HEADER_NAME URingFonts.h NAMESPACE URingFonts SOURCES Resources/Montserrat-Bold.ttf Resources/ccr_logo.png)
 set_target_properties(URingFonts PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(CCRing

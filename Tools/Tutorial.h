@@ -499,9 +499,12 @@ inline void drawSlide (juce::Image& canvas, const juce::Image& shot, const Slide
     g.setColour (Colours::white);
     g.setFont (FontOptions (44.0f).withStyle ("Bold"));
     g.drawText (U (s.title), 90, 38, 1500, 56, Justification::centredLeft);
+    // Logo de CCR arriba a la derecha y el número de diapositiva a su izquierda
+    static const auto logo = ImageCache::getFromMemory (URingFonts::ccr_logo_png, URingFonts::ccr_logo_pngSize);
+    g.drawImage (logo, Rectangle<float> (1700.0f, 18.0f, 160.0f, 92.0f), RectanglePlacement::centred);
     g.setColour (Colours::white.withAlpha (0.5f));
     g.setFont (FontOptions (24.0f));
-    g.drawText (String (index + 1) + " / " + String (total), 1660, 38, 200, 56, Justification::centredRight);
+    g.drawText (String (index + 1) + " / " + String (total), 1480, 38, 200, 56, Justification::centredRight);
     // Subtítulo
     const auto bar = Rectangle<float> (60.0f, 960.0f, 1800.0f, 90.0f);
     g.setColour (Colours::black.withAlpha (0.85f));

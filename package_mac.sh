@@ -171,6 +171,8 @@ cat > "$WORK/distribution.xml" <<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
   <title>CCRing $VERSION</title>
+  <background file="installer_logo.png" alignment="bottomleft" scaling="none"/>
+  <background-darkAqua file="installer_logo.png" alignment="bottomleft" scaling="none"/>
   <welcome file="welcome.html"/>
   <license file="license.html"/>
   <conclusion file="conclusion.html"/>
@@ -187,7 +189,12 @@ cat > "$WORK/distribution.xml" <<EOF
   <pkg-ref id="$PKG_ID.app" version="$VERSION" onConclusion="none">app.pkg</pkg-ref>
 </installer-gui-script>
 EOF
+cp "$PROJECT_DIR/Resources/installer_logo.png" "$WORK/resources/installer_logo.png"   # logo de CCR en la ventana del instalador
 productbuild --distribution "$WORK/distribution.xml" --resources "$WORK/resources" --package-path "$WORK" "$PKG" >/dev/null
+# Icono de CCR en el instalador y el zip (Finder)
+if command -v swiftc >/dev/null; then
+  swiftc -O -o "$WORK/seticon" "$PROJECT_DIR/Tools/seticon.swift" 2>/dev/null && ICON_OK=1 || ICON_OK=0
+else ICON_OK=0; fi
 ok "Instalador: $PKG"
 
 # 4. Zip para compartir
@@ -207,4 +214,5 @@ sed -e "s|@VERSION@|$VERSION|g" -e "s|@PKG@|$(basename "$PKG")|g" \
 ZIP="$DIST_DIR/$NAME-$VERSION-$ARCH_LABEL.zip"
 rm -f "$ZIP"
 ( cd "$Z" && COPYFILE_DISABLE=1 zip -q -X -r "$ZIP" . )
+[[ "${ICON_OK:-0}" == 1 ]] && "$WORK/seticon" "$PROJECT_DIR/Resources/ccr_app_icon_1024.png" "$PKG" "$ZIP" >/dev/null
 ok "Para compartir: $ZIP"

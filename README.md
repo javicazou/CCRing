@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/img/ccr_logo.png" alt="CCR" width="260"></p>
+
 # CCRing
 
 **Free and open-source physical-modelling synth with granular texture** — by CCR.
