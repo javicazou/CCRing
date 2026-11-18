@@ -47,7 +47,7 @@ y [`docs/URing_Manual_EN.pdf`](docs/URing_Manual_EN.pdf) (inglés).
 URing es y va a seguir siendo gratis. Si lo usás en tu música y querés ayudar a que siga creciendo:
 
 - **PayPal:** [paypal.me/JavierCazou](https://paypal.me/JavierCazou)
-- **Desde Argentina (Cafecito / Mercado Pago):** _(próximamente)_
+- **Mercado Pago (Argentina):** alias **`nodrama.perro`**
 
 También ayuda mucho compartir lo que hagas con URing, reportar errores en **Issues** y
 proponer mejoras.

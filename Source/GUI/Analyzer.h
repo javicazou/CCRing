@@ -442,16 +442,20 @@ public:
                                     "Right-click a knob: MIDI learn     Double-click: default value", 2);
         block ("FREE & OPEN SOURCE", "URing is free software (GNU AGPL-3.0). If it makes your music better,\n"
                                      "a small donation helps keep it alive and growing.", 2);
+        g.setColour (Palette::text.withAlpha (0.85f));
+        g.setFont (uiFont (10.5f));
+        g.drawText (mm::lang::tr ("Mercado Pago (Argentina): alias") + " " + links::mercadoPagoAlias + "   " + mm::lang::tr ("(the button copies it)"), r.removeFromTop (16.0f), Justification::centredLeft);
 
         for (const auto& b : buttons())
         {
-            const bool live = juce::String (b.url).isNotEmpty();
+            const bool live = juce::String (b.url).isNotEmpty() || juce::String (b.copy).isNotEmpty();
             const bool over = live && b.area.contains (hover);
             g.setColour (live ? Palette::accent.withAlpha (over ? 1.0f : 0.85f) : Palette::dim.withAlpha (0.25f));
             g.fillRoundedRectangle (b.area, 4.0f);
             g.setColour (live ? Colours::black : Palette::dim);
             g.setFont (uiFont (10.0f).withExtraKerningFactor (0.12f));
-            const auto label = mm::lang::tr (String::fromUTF8 (b.label));
+            const bool copied = juce::String (b.copy).isNotEmpty() && juce::Time::getMillisecondCounter() < copiedUntil;
+            const auto label = copied ? mm::lang::tr (String::fromUTF8 ("\xe2\x9c\x93 ALIAS COPIED")) : mm::lang::tr (String::fromUTF8 (b.label));
             g.drawText (live ? label : label + String::fromUTF8 (" \xc2\xb7 ") + mm::lang::tr ("SOON"), b.area, Justification::centred);
         }
 
@@ -475,16 +479,25 @@ public:
         for (const auto& b : buttons())
             if (b.area.contains (e.position))
             {
-                if (juce::String (b.url).isNotEmpty()) juce::URL (b.url).launchInDefaultBrowser();
+                if (juce::String (b.copy).isNotEmpty())   // Mercado Pago: copia el alias para pegarlo en la app
+                {
+                    juce::SystemClipboard::copyTextToClipboard (b.copy);
+                    copiedUntil = juce::Time::getMillisecondCounter() + 2500;
+                    repaint();
+                    juce::Component::SafePointer<juce::Component> safe (this);
+                    juce::Timer::callAfterDelay (2600, [safe] { if (safe != nullptr) safe->repaint(); });
+                }
+                else if (juce::String (b.url).isNotEmpty()) juce::URL (b.url).launchInDefaultBrowser();
                 return;
             }
         setVisible (false);
     }
 
 private:
-    struct LinkButton { const char* label; const char* url; juce::Rectangle<float> area; };
+    struct LinkButton { const char* label; const char* url; juce::Rectangle<float> area; const char* copy = ""; };
+    juce::uint32 copiedUntil = 0;
 
-    juce::Rectangle<float> cardArea() const { return getLocalBounds().toFloat().withSizeKeepingCentre (560.0f, 440.0f); }
+    juce::Rectangle<float> cardArea() const { return getLocalBounds().toFloat().withSizeKeepingCentre (560.0f, 460.0f); }
     juce::Rectangle<float> langArea (int i) const
     {
         const auto c = cardArea().reduced (40.0f, 30.0f);
@@ -496,7 +509,7 @@ private:
         auto row = cardArea().reduced (40.0f, 30.0f).withTrimmedBottom (22.0f).removeFromBottom (30.0f);
         const float w = (row.getWidth() - 20.0f) / 3.0f;
         std::array<LinkButton, 3> b { LinkButton { "\xe2\x99\xa5 DONATE \xc2\xb7 PAYPAL", links::donatePaypal, {} },
-                                      LinkButton { "\xe2\x99\xa5 DONATE \xc2\xb7 ARG", links::donateLocal, {} },
+                                      LinkButton { "\xe2\x99\xa5 MERCADO PAGO", "", {}, links::mercadoPagoAlias },
                                       LinkButton { "SOURCE CODE", links::sourceCode, {} } };
         for (auto& x : b) { x.area = row.removeFromLeft (w); row.removeFromLeft (10.0f); }
         return b;

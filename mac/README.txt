@@ -42,7 +42,7 @@ and Applications/Monstri Audio/URing.app
 FREE AND OPEN SOURCE
 URing is free software (GNU AGPL-3.0): use it in your music (commercial music too),
 share it and improve it. If it helps you, you can support it with a donation:
-https://paypal.me/JavierCazou
+https://paypal.me/JavierCazou  ·  Mercado Pago (Argentina): alias nodrama.perro
 (or from the plug-in: click the URing logo, top left → DONATE).
 
 CREDITS

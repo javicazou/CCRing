@@ -181,7 +181,8 @@ inline const std::unordered_map<juce::String, juce::String>& table()
         // ---- acerca de
         add ("ENGINES", "MOTORES"); add ("CREDITS", "CRÉDITOS"); add ("COMPUTER KEYBOARD", "TECLADO DE LA COMPU");
         add ("FREE & OPEN SOURCE", "LIBRE Y GRATIS"); add ("LANGUAGE", "IDIOMA"); add ("SOURCE CODE", "CÓDIGO FUENTE");
-        add ("\xe2\x99\xa5 DONATE \xc2\xb7 PAYPAL", "\xe2\x99\xa5 DONAR \xc2\xb7 PAYPAL"); add ("\xe2\x99\xa5 DONATE \xc2\xb7 ARG", "\xe2\x99\xa5 DONAR \xc2\xb7 ARG");
+        add ("\xe2\x99\xa5 DONATE \xc2\xb7 PAYPAL", "\xe2\x99\xa5 DONAR \xc2\xb7 PAYPAL"); add ("\xe2\x99\xa5 MERCADO PAGO", "\xe2\x99\xa5 MERCADO PAGO");
+        add ("\xe2\x9c\x93 ALIAS COPIED", "\xe2\x9c\x93 ALIAS COPIADO"); add ("Mercado Pago (Argentina): alias", "Mercado Pago (Argentina): alias"); add ("(the button copies it)", "(el botón lo copia)");
         add ("CLICK ANYWHERE ELSE TO CLOSE", "CLIC EN CUALQUIER OTRO LUGAR PARA CERRAR"); add ("SOON", "PRONTO");
         add ("A  Resonator (modal, string, piano, tine, reed)    B  Impact (bars, plates, bells, drums)\n"
              "C  Macro: 24 synthesis models    + granular TEXTURE, plate reverb, 7 filter types",

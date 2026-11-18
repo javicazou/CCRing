@@ -13,7 +13,7 @@ Si Windows muestra "Windows protegio su PC": Mas informacion -> Ejecutar de toda
 
 LIBRE Y GRATIS
 URing es software libre (GNU AGPL-3.0, ver LICENSE.txt). Si te sirve, podes apoyarlo
-con una donacion: https://paypal.me/JavierCazou
+con una donacion: https://paypal.me/JavierCazou  -  Mercado Pago (Argentina): alias nodrama.perro
 (o desde el plugin: toca el logo de URing, arriba a la izquierda -> DONATE).
 
 IDIOMA

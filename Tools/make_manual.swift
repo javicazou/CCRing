@@ -327,7 +327,7 @@ columns("""
 - Dejá el volumen en −20 dB y subí en el mixer de Ableton: así el delay y la reverb no saturan.
 ## Libre y gratis
 - URing es **software libre** (licencia GNU AGPL-3.0): podés usarlo en tu música, compartirlo y estudiar o mejorar el código.
-- Si te sirve, una **donación** ayuda a seguir mejorándolo: **paypal.me/JavierCazou**, o tocá el logo de URing (arriba a la izquierda) y usá **DONATE**.
+- Si te sirve, una **donación** ayuda a seguir mejorándolo: **paypal.me/JavierCazou** o Mercado Pago al alias **nodrama.perro**, o tocá el logo de URing (arriba a la izquierda) y usá **DONATE**.
 ## Créditos
 El motor C, TEXTURE y MARBLES usan el código abierto de **Plaits**, **Clouds** y **Marbles** de Mutable Instruments (Émilie Gillet), licencia MIT. Tipografía **Montserrat** (SIL OFL). Voz del tutorial: Piper es_AR Daniela (OpenSLR 61, CC BY-SA 4.0).
 """, top: 88 + hr + 16)

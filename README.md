@@ -47,6 +47,7 @@ and [`docs/URing_Manual_ES.pdf`](docs/URing_Manual_ES.pdf) (Spanish).
 URing is and will stay free. If you use it in your music and want to help it grow:
 
 - **PayPal:** [paypal.me/JavierCazou](https://paypal.me/JavierCazou)
+- **Mercado Pago (Argentina):** alias **`nodrama.perro`**
 
 Sharing what you make with URing, reporting bugs in **Issues** and suggesting improvements helps a lot too.
 

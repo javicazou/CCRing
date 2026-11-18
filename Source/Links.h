@@ -5,6 +5,6 @@
 namespace links
 {
     inline constexpr const char* donatePaypal = "https://paypal.me/JavierCazou";
-    inline constexpr const char* donateLocal  = "";   // ej. https://cafecito.app/monstriaudio o link de Mercado Pago
+    inline constexpr const char* mercadoPagoAlias = "nodrama.perro";   // Argentina: alias de Mercado Pago (el botón lo copia)
     inline constexpr const char* sourceCode   = "https://github.com/javicazou/URing";
 }

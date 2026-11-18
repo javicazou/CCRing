@@ -144,14 +144,14 @@ cat > "$ES/conclusion.html" <<EOF
 <html><body style="font-family: -apple-system, Helvetica; font-size: 13px">
 <h2>¡Listo!</h2>
 <p>Abrí tu DAW y re-escaneá los plug-ins. También podés abrir <b>Aplicaciones → Monstri Audio → URing</b> para tocarlo sin DAW.</p>
-<p>URing es gratis. Si te gusta, podés apoyarlo con una donación en <b>paypal.me/JavierCazou</b> (o desde el plugin: logo de URing → <b>DONATE</b>).</p>
+<p>URing es gratis. Si te gusta, podés apoyarlo con una donación en <b>paypal.me/JavierCazou</b> o por Mercado Pago al alias <b>nodrama.perro</b> (o desde el plugin: logo de URing → <b>DONATE</b>).</p>
 </body></html>
 EOF
 cat > "$EN/conclusion.html" <<EOF
 <html><body style="font-family: -apple-system, Helvetica; font-size: 13px">
 <h2>All done!</h2>
 <p>Open your DAW and rescan plug-ins. You can also open <b>Applications → Monstri Audio → URing</b> to play it without a DAW.</p>
-<p>URing is free. If you like it, you can support it with a donation at <b>paypal.me/JavierCazou</b> (or from the plug-in: URing logo → <b>DONATE</b>).</p>
+<p>URing is free. If you like it, you can support it with a donation at <b>paypal.me/JavierCazou</b> or, in Argentina, by Mercado Pago to the alias <b>nodrama.perro</b> (or from the plug-in: URing logo → <b>DONATE</b>).</p>
 </body></html>
 EOF
 

@@ -328,7 +328,7 @@ columns("""
 - Leave the volume at −20 dB and raise it on the Ableton mixer, so delay and reverb never clip.
 ## Free and open source
 - URing is **free software** (GNU AGPL-3.0 licence): use it in your music, share it, study and improve the code.
-- If it helps you, a **donation** keeps it growing: **paypal.me/JavierCazou**, or click the URing logo (top left) and use **DONATE**.
+- If it helps you, a **donation** keeps it growing: **paypal.me/JavierCazou** or Mercado Pago (Argentina) to the alias **nodrama.perro**, or click the URing logo (top left) and use **DONATE**.
 ## Credits
 Engine C, TEXTURE and MARBLES use the open-source code of **Plaits**, **Clouds** and **Marbles** by Mutable Instruments (Émilie Gillet), MIT licence. Typeface **Montserrat** (SIL OFL).
 """, top: 88 + hr + 16)

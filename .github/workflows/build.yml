@@ -88,7 +88,7 @@ jobs:
             - **Mac** (Intel & Apple Silicon, macOS 11+): download `URing-…-Mac.zip`, open the `.pkg` and read `README.txt`.
             - **Windows** (10/11, 64-bit): download `URing-…-Windows.zip` and run `INSTALAR_PLUGIN.bat` as administrator.
             - Not signed by Apple/Microsoft (it is free): the first time the system warns you; the README explains how to open it.
-            - Donations ♥ https://paypal.me/JavierCazou
+            - Donations ♥ https://paypal.me/JavierCazou  ·  Mercado Pago (Argentina): alias `nodrama.perro`
 
             ---
 
@@ -97,4 +97,4 @@ jobs:
             - **Windows** (10/11, 64 bits): bajá `URing-…-Windows.zip` y ejecutá `INSTALAR_PLUGIN.bat` como administrador.
 
             URing no está firmado por Apple ni Microsoft (es gratuito): la primera vez el sistema avisa; en el LEEME está cómo abrirlo.
-            Si te gusta, podés apoyarlo con una donación ♥ en https://paypal.me/JavierCazou (o desde el plugin: logo de URing → DONATE).
+            Si te gusta, podés apoyarlo con una donación ♥ en https://paypal.me/JavierCazou o por Mercado Pago al alias `nodrama.perro` (o desde el plugin: logo de URing → DONATE).

@@ -17,7 +17,7 @@ LANGUAGE -> ESPANOL.
 
 FREE AND OPEN SOURCE
 URing is free software (GNU AGPL-3.0, see LICENSE.txt). If it helps you, you can
-support it with a donation: https://paypal.me/JavierCazou
+support it with a donation: https://paypal.me/JavierCazou  -  Mercado Pago (Argentina): alias nodrama.perro
 (or from the plug-in: click the URing logo, top left -> DONATE).
 
 CREDITS

@@ -42,7 +42,7 @@ y Aplicaciones/Monstri Audio/URing.app
 LIBRE Y GRATIS
 URing es software libre (GNU AGPL-3.0): usalo en tu música (también comercial),
 compartilo y mejoralo. Si te sirve, podés apoyarlo con una donación:
-https://paypal.me/JavierCazou
+https://paypal.me/JavierCazou  ·  Mercado Pago (Argentina): alias nodrama.perro
 (o desde el plugin: tocá el logo de URing, arriba a la izquierda → DONATE).
 
 CRÉDITOS
