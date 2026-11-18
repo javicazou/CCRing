@@ -81,8 +81,9 @@ class LPCSpeechSynth {
         frame_fractional);
   }
 
+  void PlayFrame(const Frame& f1, const Frame& f2, float blend);   // URing: público (ver el controlador)
+
  private:
-  void PlayFrame(const Frame& f1, const Frame& f2, float blend);
   
   template <int scale, typename X>
   float BlendCoefficient(X a, X b, float blend) {

@@ -12,9 +12,15 @@ namespace mm::gui
 class IconButton : public juce::Button
 {
 public:
-    enum class Icon { Undo, Redo, Browse, Cables };
+    enum class Icon { Undo, Redo, Browse, Cables, Dice };
     int level = 0;   // Cables: 0 = a la vista, 1 = transparentes, 2 = ocultos
     explicit IconButton (Icon i) : juce::Button ({}), icon (i) {}
+    std::function<void()> onRightClick;   // clic derecho (menú)
+    void mouseDown (const juce::MouseEvent& e) override
+    {
+        if (e.mods.isPopupMenu() && onRightClick) { onRightClick(); return; }
+        juce::Button::mouseDown (e);
+    }
 
     void paintButton (juce::Graphics& g, bool over, bool down) override
     {
@@ -32,6 +38,16 @@ public:
         const float a = isEnabled() ? (over ? 1.0f : 0.85f) : 0.3f;
         g.setColour ((on ? Colours::black : Palette::text).withAlpha (a));
         const auto c = r.getCentre();
+        if (icon == Icon::Dice)
+        {
+            // dado: cuadrado redondeado con la cara del 5
+            const auto d = Rectangle<float> (15.0f, 15.0f).withCentre (c);
+            g.drawRoundedRectangle (d, 3.5f, 1.6f);
+            const float o = 3.8f;
+            for (auto p : { Point<float> (-o, -o), Point<float> (o, -o), Point<float> (0, 0), Point<float> (-o, o), Point<float> (o, o) })
+                g.fillEllipse (c.x + p.x - 1.4f, c.y + p.y - 1.4f, 2.8f, 2.8f);
+            return;
+        }
         if (icon == Icon::Cables)
         {
             // dos jacks unidos por un cable que cuelga; transparente u oculto (tachado) según el modo

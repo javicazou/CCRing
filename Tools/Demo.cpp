@@ -8,6 +8,7 @@
 #include "PluginEditor.h"
 #include "Presets.h"
 #include "Tutorial.h"
+#include "Promo.h"
 
 namespace
 {
@@ -37,7 +38,8 @@ void writePng (juce::Component& c, const juce::File& f)
 {
     f.deleteFile();
     juce::FileOutputStream os (f);
-    juce::PNGImageFormat().writeImageToStream (c.createComponentSnapshot (c.getLocalBounds(), true, 1.0f), os);
+    const float scale = std::getenv ("URING_SHOT_SCALE") != nullptr ? (float) std::atof (std::getenv ("URING_SHOT_SCALE")) : 1.0f;   // capturas en alta: URING_SHOT_SCALE=2
+    juce::PNGImageFormat().writeImageToStream (c.createComponentSnapshot (c.getLocalBounds(), true, scale), os);
     std::cout << "GUI: " << f.getFullPathName() << std::endl;
 }
 }
@@ -314,6 +316,101 @@ int main (int argc, char** argv)
         ed->showAbout (true); juce::MessageManager::getInstance()->runDispatchLoopUntil (100);
         writePng (*editor, outDir.getChildFile ("look_about.png"));
         return 0;
+    }
+    if (argc > 2 && juce::String (argv[2]) == "dice") // RANDOM (dado): niveles, que nada se rompa, deshacer, audio de ejemplo
+    {
+        constexpr double tsr = 48000.0;
+        constexpr int bs = 512;
+        proc.setPlayConfigDetails (0, 2, tsr, bs);
+        int fails = 0;
+        auto check = [&] (bool ok, const juce::String& what) { std::cout << (ok ? "OK   " : "FAIL ") << what << std::endl; if (! ok) ++fails; };
+        const int notes[] { 48, 55, 60, 63, 67 };
+        auto render = [&] (juce::AudioBuffer<float>& out)
+        {
+            proc.prepareToPlay (tsr, bs);
+            juce::AudioBuffer<float> b (2, bs);
+            out.setSize (2, (int) (4.0 * tsr)); out.clear();
+            for (int pos = 0; pos + bs <= out.getNumSamples(); pos += bs)
+            {
+                juce::MidiBuffer m;
+                for (int k = 0; k < 5; ++k)
+                {
+                    const int on = (int) ((k < 3 ? k * 0.35 : 1.2) * tsr), off = on + (int) ((k < 3 ? 0.3 : 2.0) * tsr);
+                    if (on >= pos && on < pos + bs) m.addEvent (juce::MidiMessage::noteOn (1, notes[k], 0.8f), on - pos);
+                    if (off >= pos && off < pos + bs) m.addEvent (juce::MidiMessage::noteOff (1, notes[k]), off - pos);
+                }
+                proc.processBlock (b, m);
+                for (int c = 0; c < 2; ++c) out.copyFrom (c, pos, b, c, 0, bs);
+            }
+        };
+        auto loud = [&] (const juce::AudioBuffer<float>& out)
+        {
+            const int win = (int) (0.4 * tsr); double best = 0.0;
+            for (int s0 = 0; s0 + win <= out.getNumSamples(); s0 += win / 4)
+            { double sum = 0; for (int c = 0; c < 2; ++c) { auto* d = out.getReadPointer (c, s0); for (int i = 0; i < win; ++i) sum += d[i] * d[i]; }
+              best = std::max (best, std::sqrt (sum / (2.0 * win))); }
+            return juce::Decibels::gainToDecibels ((float) best, -120.0f);
+        };
+        std::vector<float> levels; int silent = 0, broken = 0, clipped = 0;
+        juce::AudioBuffer<float> wav (2, 0), out;
+        for (int k = 0; k < 40; ++k)
+        {
+            proc.loadPreset (findPreset ("Init Ring"));
+            const auto what = proc.randomizeSound (URingAudioProcessor::RandAll, false);
+            render (out);
+            bool nan = false;
+            for (int c = 0; c < 2; ++c) for (int i = 0; i < out.getNumSamples(); ++i) if (! std::isfinite (out.getSample (c, i))) nan = true;
+            const float pk = out.getMagnitude (0, out.getNumSamples()), l = loud (out);
+            levels.push_back (l);
+            silent += l < -60.0f; broken += nan; clipped += pk > 0.99f;
+            std::cout << "DICE " << juce::String (k).paddedLeft (' ', 2) << "  level " << juce::String (l, 1).paddedLeft (' ', 6) << " dB  peak "
+                      << juce::String (juce::Decibels::gainToDecibels (pk), 1).paddedLeft (' ', 6) << "  " << what << std::endl;
+            if (k < 10)
+            {
+                const int old = wav.getNumSamples(); wav.setSize (2, old + out.getNumSamples(), true, true);
+                for (int c = 0; c < 2; ++c) wav.copyFrom (c, old, out, c, 0, out.getNumSamples());
+            }
+        }
+        auto sorted = levels; std::sort (sorted.begin(), sorted.end());
+        const float median = sorted[sorted.size() / 2];
+        std::cout << "DICE median level " << median << " dB (factory presets ~ -23 dB), min " << sorted.front() << ", max " << sorted.back() << std::endl;
+        check (broken == 0, "no NaN / broken audio in 40 random sounds");
+        check (silent <= 1, "random sounds are audible (" + juce::String (silent) + " too quiet)");
+        check (clipped <= 2, "random sounds rarely hit the limiter (" + juce::String (clipped) + ")");
+        check (median > -28.0f && median < -18.0f, "median level close to the factory presets");
+        // Variación: cambia poco
+        proc.loadPreset (findPreset ("Marimba Rosewood"));
+        const float before = proc.apvts.getRawParameterValue (IDs::bMaterial)->load();
+        const int model = (int) proc.apvts.getRawParameterValue (IDs::bModel)->load();
+        proc.randomizeSound (URingAudioProcessor::RandAll, true);
+        const float after = proc.apvts.getRawParameterValue (IDs::bMaterial)->load();
+        check (std::abs (after - before) <= 0.151f && (int) proc.apvts.getRawParameterValue (IDs::bModel)->load() == model, "VARY moves knobs a little and keeps the models");
+        // Solo motor C: no toca el motor A
+        proc.loadPreset (findPreset ("Felt Upright"));
+        const float aModel = proc.apvts.getRawParameterValue (IDs::aModel)->load();
+        proc.randomizeSound (URingAudioProcessor::RandEngineC, false);
+        check (proc.apvts.getRawParameterValue (IDs::aModel)->load() == aModel && proc.apvts.getRawParameterValue (IDs::cMix)->load() > 0.4f, "ENGINE C ONLY leaves engine A alone and makes C audible");
+        // Deshacer
+        proc.loadPreset (findPreset ("Felt Upright"));
+        proc.undoTick (false);
+        proc.randomizeSound (URingAudioProcessor::RandAll, false);
+        proc.undoTick (true);
+        proc.undo();
+        check (proc.getCurrentPresetName() == "Felt Upright" && proc.apvts.getRawParameterValue (IDs::aModel)->load() == aModel, "undo brings back the previous sound");
+        // secuenciador apagado después de un random
+        check (proc.apvts.getRawParameterValue (IDs::seqOn)->load() < 0.5f, "sequencer stays off");
+        {   // captura con un sonido al azar cargado
+            proc.randomizeSound (URingAudioProcessor::RandAll, false);
+            std::unique_ptr<juce::AudioProcessorEditor> editor (proc.createEditor());
+            editor->setSize (URingAudioProcessorEditor::baseW, URingAudioProcessorEditor::baseH);
+            juce::MessageManager::getInstance()->runDispatchLoopUntil (200);
+            writePng (*editor, outDir.getChildFile ("dado.png"));
+        }
+        wav.applyGain (juce::Decibels::decibelsToGain (14.0f));
+        { auto f = outDir.getChildFile ("dado_10_sonidos.wav"); f.deleteFile(); juce::WavAudioFormat fmt;
+          std::unique_ptr<juce::AudioFormatWriter> w (fmt.createWriterFor (new juce::FileOutputStream (f), tsr, 2, 24, {}, 0)); w->writeFromAudioSampleBuffer (wav, 0, wav.getNumSamples()); }
+        std::cout << (fails == 0 ? "DICE: all checks passed" : "DICE: " + juce::String (fails) + " FAILED") << std::endl;
+        return fails == 0 ? 0 : 1;
     }
     if (argc > 2 && juce::String (argv[2]) == "c15") // 1.5: carril MODEL, motor C como excitador de A y C > B (niveles y nulos)
     {
@@ -1578,6 +1675,12 @@ int main (int argc, char** argv)
         w->writeFromAudioSampleBuffer (wav, 0, wav.getNumSamples());
         std::cout << "WAV: " << f.getFullPathName() << std::endl;
         return 0;
+    }
+    if (argc > 2 && juce::String (argv[2]) == "promo") // videos verticales para redes (--en = en inglés)
+    {
+        bool en = false;
+        for (int i = 3; i < argc; ++i) if (juce::String (argv[i]) == "--en") en = true;
+        return promo::run (proc, outDir, en);
     }
     if (argc > 2 && (juce::String (argv[2]) == "video15en" || juce::String (argv[2]) == "video15es")) // videos cortos de CCRing 1.5
         return tutorial::run (proc, outDir, true, juce::String (argv[2]) == "video15en", false, true);

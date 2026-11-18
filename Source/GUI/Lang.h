@@ -171,7 +171,14 @@ inline const std::unordered_map<juce::String, juce::String>& table()
         add ("SEQ 1  A", "SEQ 1  A"); add ("SEQ 2  B", "SEQ 2  B");
         // ---- grilla del secuenciador
         add ("NOTE", "NOTA"); add ("OCT", "OCT"); add ("VELO", "VELO"); add ("RTCH", "RTCH"); add ("COND", "COND"); add ("LOCK", "LOCK"); add ("MODEL", "MODELO"); add ("C MODEL", "MODELO C"); add ("OCTAVE", "OCTAVA"); add ("VELOCITY", "VELOCIDAD"); add ("PROBABILITY", "PROBABILIDAD"); add ("RATCHET", "RATCHET"); add ("CONDITION", "CONDICIÓN");
-        add ("KNOB MODEL", "MODELO DE LA PERILLA"); add ("C MODEL: a different engine C model on each step", "MODELO C: otro modelo del motor C en cada paso");
+        add ("KNOB MODEL", "MODELO DE LA PERILLA");
+        add ("Random sound. Right-click: what to randomize, or a small variation", "Sonido al azar. Clic derecho: qué sortear, o una variación chica");
+        add ("RANDOM SOUND", "SONIDO AL AZAR"); add ("Everything (new sound)", "Todo (sonido nuevo)");
+        add ("Engine A only", "Solo motor A"); add ("Engine B only", "Solo motor B"); add ("Engine C only", "Solo motor C");
+        add ("Effects only", "Solo efectos"); add ("Modulation only (LFOs and cables)", "Solo modulación (LFOs y cables)");
+        add ("VARIATION (moves the current sound a little)", "VARIAR (mueve un poco el sonido actual)");
+        add ("Vary everything", "Variar todo"); add ("Vary engines A / B", "Variar motores A / B"); add ("Vary engine C", "Variar motor C");
+        add ("Vary effects", "Variar efectos"); add ("VARIATION", "VARIACIÓN"); add ("C MODEL: a different engine C model on each step", "MODELO C: otro modelo del motor C en cada paso");
         add ("PAGE", "PÁGINA"); add ("STEP", "PASO"); add ("PATTERN", "PATRÓN"); add ("CHAIN", "CADENA"); add ("AUTO", "AUTO");
         add ("AUTO (= STEPS)", "AUTO (= PASOS)"); add ("FIT SCALE", "AJUSTAR ESCALA"); add ("RND LANE", "AZAR CARRIL"); add ("RND RHYTHM", "AZAR RITMO");
         add ("RND ALL", "AZAR TODO"); add ("GENERATE", "GENERAR"); add ("RESET", "REINICIAR"); add ("COPY", "COPIAR"); add ("PASTE", "PEGAR");

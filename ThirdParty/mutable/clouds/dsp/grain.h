@@ -53,6 +53,7 @@ class Grain {
   void Init() {
     active_ = false;
     envelope_phase_ = 2.0f;
+    recommended_quality_ = GRAIN_QUALITY_LOW;   // URing: se leía sin inicializar antes del primer Start()
   }
 
   void Start(

@@ -131,7 +131,10 @@ private:
     mm::gui::AboutOverlay about;
     mm::gui::PresetBrowser browser;
     mm::gui::IconButton undoBtn { mm::gui::IconButton::Icon::Undo }, redoBtn { mm::gui::IconButton::Icon::Redo },
-                        browseBtn { mm::gui::IconButton::Icon::Browse }, cablesBtn { mm::gui::IconButton::Icon::Cables };
+                        browseBtn { mm::gui::IconButton::Icon::Browse }, cablesBtn { mm::gui::IconButton::Icon::Cables },
+                        diceBtn { mm::gui::IconButton::Icon::Dice };
+    void rollDice (URingAudioProcessor::RandomScope scope, bool vary);
+    void showDiceMenu();
     void setCableView (int view, bool announce);
     int previewNote = -1, previewId = 0;
     float ledFlash = 0.0f;   // LED del logo (titila al tempo)

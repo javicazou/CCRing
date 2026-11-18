@@ -62,6 +62,8 @@ void GranularProcessor::Init(
   previous_playback_mode_ = PLAYBACK_MODE_LAST;
   reset_buffers_ = true;
   dry_wet_ = 0.0f;
+  // URing: la realimentación arrancaba con memoria sin inicializar (podía meter NaN en el búfer)
+  std::fill(&fb_[0].l, &fb_[0].l + sizeof(fb_) / sizeof(float), 0.0f);
 }
 
 void GranularProcessor::ResetFilters() {
@@ -76,6 +78,11 @@ void GranularProcessor::ProcessGranular(
     FloatFrame* input,
     FloatFrame* output,
     size_t size) {
+  // URing: entrada acotada (el conversor de frecuencia arrancaba con historia sin inicializar)
+  for (size_t i = 0; i < size; ++i) {
+    if (!(input[i].l > -4.0f && input[i].l < 4.0f)) input[i].l = 0.0f;
+    if (!(input[i].r > -4.0f && input[i].r < 4.0f)) input[i].r = 0.0f;
+  }
   // At the exception of the spectral mode, all modes require the incoming
   // audio signal to be written to the recording buffer.
   if (playback_mode_ != PLAYBACK_MODE_SPECTRAL) {
@@ -210,6 +217,11 @@ void GranularProcessor::Process(
   } else {
     ProcessGranular(in_, out_, size);
   }
+  // URing: lo que sale de los granos se acota antes del difusor, el pitch shifter y la reverb
+  for (size_t i = 0; i < size; ++i) {
+    if (!(out_[i].l > -8.0f && out_[i].l < 8.0f)) out_[i].l = 0.0f;
+    if (!(out_[i].r > -8.0f && out_[i].r < 8.0f)) out_[i].r = 0.0f;
+  }
   
   // Diffusion and pitch-shifting post-processings.
   if (playback_mode_ != PLAYBACK_MODE_SPECTRAL) {
@@ -256,6 +268,12 @@ void GranularProcessor::Process(
         &out_[0].r, &out_[0].r, size, 2);
   }
   
+  // URing: un valor inválido o desbocado no vuelve por la realimentación ni llega a la salida
+  for (size_t i = 0; i < size; ++i) {
+    if (!(out_[i].l > -8.0f && out_[i].l < 8.0f)) out_[i].l = 0.0f;
+    if (!(out_[i].r > -8.0f && out_[i].r < 8.0f)) out_[i].r = 0.0f;
+  }
+
   // This is what is fed back. Reverb is not fed back.
   copy(&out_[0], &out_[size], &fb_[0]);
   
@@ -281,6 +299,8 @@ void GranularProcessor::Process(
     float r = static_cast<float>(input[i].r) / 32768.0f * fade_out;
     l += out_[i].l * post_gain * fade_in;
     r += out_[i].r * post_gain * fade_in;
+    if (!(l > -8.0f && l < 8.0f)) l = 0.0f;   // URing: nunca un NaN a la conversión a 16 bits
+    if (!(r > -8.0f && r < 8.0f)) r = 0.0f;
     output[i].l = SoftConvert(l);
     output[i].r = SoftConvert(r);
   }

@@ -62,7 +62,7 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
     addAndMakeVisible (canvas);
     for (auto* c : std::initializer_list<juce::Component*> { &synthPage, &fxPage, &seqPage, &livePage, &macroPage, &texturePage, &lcd, &keyboard,
                                                                &synthTab, &fxTab, &seqTab, &liveTab, &macroTab, &textureTab, &prevPreset, &nextPreset, &presetBox, &saveBtn,
-                                                               &recBtn, &recLenBox, &miniMeter, &logoHotspot, &undoBtn, &redoBtn, &browseBtn, &cablesBtn })
+                                                               &recBtn, &recLenBox, &miniMeter, &logoHotspot, &undoBtn, &redoBtn, &browseBtn, &cablesBtn, &diceBtn })
         canvas.addAndMakeVisible (c);
     addMouseListener (this, true);   // cualquier clic en el plugin = el usuario tocó algo (para deshacer)
     setWantsKeyboardFocus (true);
@@ -73,6 +73,9 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
     redoBtn.onClick = [this] { doUndo (true); };
     browseBtn.onClick = [this] { if (browser.isVisible()) browser.hide(); else browser.show(); };
     cablesBtn.setTooltip ("Cables: shown / faded / hidden (they keep working)");
+    diceBtn.setTooltip ("Random sound. Right-click: what to randomize, or a small variation");
+    diceBtn.onClick = [this] { rollDice (URingAudioProcessor::RandAll, false); };
+    diceBtn.onRightClick = [this] { showDiceMenu(); };
     cablesBtn.onClick = [this] { setCableView ((synthPage.cableView + 1) % 3, true); };
     browser.onPreview = [this] (const juce::String& category) { playPreview (category); };
     browser.favouritesFile = URingAudioProcessor::userPresetFolder().getParentDirectory().getChildFile ("Favorites.txt");
@@ -523,13 +526,14 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
     textureTab.setBounds (408, 17, 66, 28);
     browseBtn.setBounds (480, 16, 30, 30);
     prevPreset.setBounds (514, 16, 24, 30);
-    presetBox.setBounds (540, 16, 150, 30);
-    nextPreset.setBounds (692, 16, 24, 30);
-    undoBtn.setBounds (720, 16, 28, 30);
-    redoBtn.setBounds (750, 16, 28, 30);
-    saveBtn.setBounds (784, 16, 56, 30);
-    recBtn.setBounds (846, 16, 58, 30);
-    recLenBox.setBounds (908, 16, 66, 30);
+    presetBox.setBounds (540, 16, 124, 30);
+    nextPreset.setBounds (666, 16, 24, 30);
+    diceBtn.setBounds (694, 16, 30, 30);   // RANDOM: sonido al azar
+    undoBtn.setBounds (728, 16, 28, 30);
+    redoBtn.setBounds (758, 16, 28, 30);
+    saveBtn.setBounds (790, 16, 56, 30);
+    recBtn.setBounds (850, 16, 56, 30);
+    recLenBox.setBounds (910, 16, 64, 30);
     miniMeter.setBounds (980, 12, 22, 40);
     cablesBtn.setBounds (1008, 16, 30, 30);
     lcd.setBounds (1044, 12, baseW - 22 - 1044, 40);
@@ -674,6 +678,7 @@ void URingAudioProcessorEditor::retranslateUi()
     redoBtn.setTooltip (tr ("Redo (Cmd+Shift+Z)"));
     browseBtn.setTooltip (tr ("Preset browser: search, categories, favorites"));
     cablesBtn.setTooltip (tr ("Cables: shown / faded / hidden (they keep working)"));
+    diceBtn.setTooltip (tr ("Random sound. Right-click: what to randomize, or a small variation"));
     logoHotspot.setHelpText (tr ("About CCRing"));
     recBtn.setTooltip (tr ("REC: while the song plays, every knob you move is recorded in a loop (LEN). Right-click: recorded knobs / clear"));
     recLenBox.setTooltip (tr ("Automation loop: SEQ = one full cycle of SEQ 1 (8, 16, 32, 64 steps...), or 1-8 bars. REC records exactly one loop"));
@@ -1362,6 +1367,54 @@ void URingAudioProcessorEditor::setCableView (int view, bool announce)
         static const char* names[] { "CABLES: SHOWN", "CABLES: FADED", "CABLES: HIDDEN" };
         lcd.setText ("CABLES", mm::lang::tr (names[view]));
     }
+}
+
+// RANDOM (dado): sonido al azar o variación; queda como un paso de deshacer
+void URingAudioProcessorEditor::rollDice (URingAudioProcessor::RandomScope scope, bool vary)
+{
+    quietUntil = juce::Time::getMillisecondCounter() + 500;
+    userActed = true;
+    const auto what = proc.randomizeSound (scope, vary);
+    lcd.setText (vary ? juce::String (mm::lang::tr ("VARIATION")) : juce::String ("RANDOM"), what);
+    populatePresetMenu();
+    canvas.repaint();
+}
+
+void URingAudioProcessorEditor::showDiceMenu()
+{
+    using mm::lang::tr;
+    juce::PopupMenu m;
+    m.addSectionHeader (tr ("RANDOM SOUND"));
+    m.addItem (1, tr ("Everything (new sound)"));
+    m.addItem (2, tr ("Engine A only"));
+    m.addItem (3, tr ("Engine B only"));
+    m.addItem (4, tr ("Engine C only"));
+    m.addItem (5, tr ("Effects only"));
+    m.addItem (6, tr ("Modulation only (LFOs and cables)"));
+    m.addSeparator();
+    m.addSectionHeader (tr ("VARIATION (moves the current sound a little)"));
+    m.addItem (11, tr ("Vary everything"));
+    m.addItem (12, tr ("Vary engines A / B"));
+    m.addItem (13, tr ("Vary engine C"));
+    m.addItem (14, tr ("Vary effects"));
+    m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&diceBtn), [this] (int r)
+    {
+        using RS = URingAudioProcessor::RandomScope;
+        switch (r)
+        {
+            case 1: rollDice (RS::RandAll, false); break;
+            case 2: rollDice (RS::RandEngineA, false); break;
+            case 3: rollDice (RS::RandEngineB, false); break;
+            case 4: rollDice (RS::RandEngineC, false); break;
+            case 5: rollDice (RS::RandFx, false); break;
+            case 6: rollDice (RS::RandMod, false); break;
+            case 11: rollDice (RS::RandAll, true); break;
+            case 12: rollDice (RS::RandEngineA, true); rollDice (RS::RandEngineB, true); break;
+            case 13: rollDice (RS::RandEngineC, true); break;
+            case 14: rollDice (RS::RandFx, true); break;
+            default: break;
+        }
+    });
 }
 
 // ESCUCHAR en el buscador: una nota corta de cada preset que se elige (graves más abajo)

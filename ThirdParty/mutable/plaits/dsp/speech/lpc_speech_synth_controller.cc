@@ -277,13 +277,18 @@ void LPCSpeechSynthController::Render(
   }
   
   if (playback_frame_ == -1 && remaining_frame_samples_ == 0) {
+    // URing: address acotado a [0, 1] (con modulación podía pasarse y leer fuera de la tabla)
+    const float a = address < 0.0f ? 0.0f : (address > 1.0f ? 1.0f : address);
     synth_.PlayFrame(
         frames,
-        address * (static_cast<float>(num_frames) - 1.0001f),
+        a * (static_cast<float>(num_frames) - 1.0001f),
         true);
   } else {
     if (remaining_frame_samples_ == 0) {
-      synth_.PlayFrame(frames, float(playback_frame_), false);
+      // URing: sin interpolar se usa el mismo cuadro dos veces (la versión original leía el
+      // cuadro siguiente aunque no lo usara, y en el último cuadro se salía de la tabla)
+      const LPCSpeechSynth::Frame& f = frames[playback_frame_];
+      synth_.PlayFrame(f, f, 0.0f);
       remaining_frame_samples_ = kSampleRate / kLPCSpeechSynthFPS * \
           time_stretch;
       ++playback_frame_;

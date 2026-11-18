@@ -75,7 +75,9 @@ public:
         for (int i = 0; i < n; ++i)
         {
             // ---- host → 32 kHz (pasa-bajos + interpolación lineal)
-            const float xl = lpIn[0].process (l[i]), xr = lpIn[1].process (r[i]);
+            // entrada saneada: un valor inválido o enorme no puede llegar al búfer de Clouds
+            auto safe = [] (float x) { return std::isfinite (x) ? juce::jlimit (-4.0f, 4.0f, x) : 0.0f; };
+            const float xl = lpIn[0].process (safe (l[i])), xr = lpIn[1].process (safe (r[i]));
             phaseIn += stepIn;
             while (phaseIn >= 1.0)
             {

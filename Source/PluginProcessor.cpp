@@ -1455,6 +1455,213 @@ juce::String URingAudioProcessor::getCurrentPresetName() const
     return userPresetName.isNotEmpty() ? userPresetName : juce::String ("Init");
 }
 
+
+//==============================================================================
+float URingAudioProcessor::measureSoundLevelDb()
+{
+    URingAudioProcessor probe;
+    for (int i = 0; i < numParams && i < probe.numParams; ++i)
+        probe.rangedParams.getUnchecked (i)->setValueNotifyingHost (rangedParams.getUnchecked (i)->getValue());
+    probe.clearPatches();
+    for (const auto& c : getPatches()) probe.addPatch (c.source, c.dest, c.amount);
+    probe.presetTrimDb = presetTrimDb.load();
+    probe.setParamValue (IDs::seqOn, 0.0f);
+    constexpr double sr = 48000.0;
+    constexpr int bs = 512;
+    probe.setPlayConfigDetails (0, 2, sr, bs);
+    probe.prepareToPlay (sr, bs);
+    juce::AudioBuffer<float> b (2, bs);
+    const int total = (int) (1.6 * sr), win = (int) (0.4 * sr);
+    std::vector<float> sq ((size_t) total, 0.0f);
+    static const int notes[] { 48, 55, 63 };
+    for (int pos = 0; pos + bs <= total; pos += bs)
+    {
+        juce::MidiBuffer m;
+        if (pos == 0) for (int n : notes) m.addEvent (juce::MidiMessage::noteOn (1, n, 0.8f), 0);
+        if (pos <= (int) (1.0 * sr) && pos + bs > (int) (1.0 * sr)) for (int n : notes) m.addEvent (juce::MidiMessage::noteOff (1, n), 0);
+        probe.processBlock (b, m);
+        for (int i = 0; i < bs; ++i)
+            sq[(size_t) (pos + i)] = 0.5f * (b.getSample (0, i) * b.getSample (0, i) + b.getSample (1, i) * b.getSample (1, i));
+    }
+    double best = 0.0, sum = 0.0;
+    for (int i = 0; i < total; ++i)
+    {
+        sum += sq[(size_t) i];
+        if (i >= win) sum -= sq[(size_t) (i - win)];
+        if (i >= win - 1) best = std::max (best, sum / win);
+    }
+    return juce::Decibels::gainToDecibels ((float) std::sqrt (std::max (0.0, best)), -120.0f);
+}
+
+//==============================================================================
+// RANDOM (dado). Cada tirada queda como un paso de deshacer (lo registra el editor).
+juce::String URingAudioProcessor::randomizeSound (RandomScope scope, bool vary)
+{
+    juce::Random r;
+    auto& P = *this;
+    auto setReal = [&P] (const char* id, float v) { P.setParamValue (id, v); };
+    auto uni = [&r] (float lo, float hi) { return lo + (hi - lo) * r.nextFloat(); };
+    auto logu = [&r] (float lo, float hi) { return lo * std::pow (hi / lo, r.nextFloat()); };
+    auto chance = [&r] (float p) { return r.nextFloat() < p; };
+
+    if (vary)
+    {
+        // VARIAR: cada perilla continua del grupo se corre hasta ±15 % (los selectores no cambian)
+        static const char* all[] { IDs::aStructure, IDs::aBright, IDs::aDamping, IDs::aPosition, IDs::bMaterial, IDs::bDecay,
+                                   IDs::bTone, IDs::bPosition, IDs::bSpread, IDs::cHarm, IDs::cTimbre, IDs::cMorph, IDs::cDecay,
+                                   IDs::cColour, IDs::cutoff, IDs::resonance, IDs::fltEnv, IDs::attack, IDs::decay, IDs::release,
+                                   IDs::variation, IDs::width, IDs::chorusMix, IDs::delayMix, IDs::springMix };
+        int moved = 0;
+        for (auto* id : all)
+        {
+            const juce::String s (id);
+            const bool inScope = scope == RandAll || (scope == RandEngineA && s.startsWith ("a"))
+                              || (scope == RandEngineB && s.startsWith ("b")) || (scope == RandEngineC && s.startsWith ("c") && s != IDs::cutoff && ! s.startsWith ("chorus"))
+                              || (scope == RandFx && (s.startsWith ("chorus") || s.startsWith ("delay") || s.startsWith ("spring")));
+            if (! inScope) continue;
+            if (auto* p = apvts.getParameter (id))
+            {
+                const SuppressTouch st (*this);
+                p->beginChangeGesture();
+                p->setValueNotifyingHost (juce::jlimit (0.0f, 1.0f, p->getValue() + (r.nextFloat() * 2.0f - 1.0f) * 0.15f));
+                p->endChangeGesture();
+                ++moved;
+            }
+        }
+        presetDirty = true;
+        return "VARIATION  " + juce::String (moved) + " KNOBS";
+    }
+
+    juce::StringArray parts;
+    const bool all = scope == RandAll;
+    // Forma general del sonido (solo con "todo"): A sola, B sola, A+B, C protagonista o C excitando a A
+    int shape = 0;
+    if (all)
+    {
+        shape = r.nextInt (5);
+        setReal (IDs::abMix, shape == 0 ? uni (0.0f, 0.15f) : shape == 1 ? uni (0.85f, 1.0f) : uni (0.3f, 0.7f));
+        setReal (IDs::cMix, shape == 3 ? uni (0.6f, 1.0f) : chance (0.25f) ? uni (0.1f, 0.35f) : 0.0f);
+        setReal (IDs::xfeed, chance (0.25f) ? uni (0.05f, 0.35f) : 0.0f);
+        setReal (IDs::cFeed, shape == 4 ? 0.0f : (chance (0.15f) ? uni (0.2f, 0.7f) : 0.0f));
+        setReal (IDs::cFeedB, chance (0.15f) ? uni (0.2f, 0.7f) : 0.0f);
+        setReal (IDs::variation, uni (0.0f, 0.45f));
+        setReal (IDs::width, uni (0.3f, 0.85f));
+        setReal (IDs::tune, 0.0f);
+        // filtro y envolvente
+        setReal (IDs::fltType, chance (0.6f) ? 0.0f : (float) r.nextInt (7));
+        setReal (IDs::cutoff, logu (900.0f, 16000.0f));
+        setReal (IDs::resonance, uni (0.0f, 0.5f));
+        setReal (IDs::fltEnv, chance (0.5f) ? uni (0.0f, 0.6f) : 0.0f);
+        setReal (IDs::fltDecay, logu (60.0f, 1500.0f));
+        setReal (IDs::drive, chance (0.3f) ? uni (0.05f, 0.4f) : 0.0f);
+        const bool pad = chance (0.25f);
+        setReal (IDs::attack, pad ? logu (150.0f, 1500.0f) : logu (0.5f, 25.0f));
+        setReal (IDs::decay, logu (300.0f, 6000.0f));
+        setReal (IDs::sustain, pad ? uni (0.6f, 1.0f) : uni (0.0f, 0.8f));
+        setReal (IDs::release, pad ? logu (900.0f, 4000.0f) : logu (150.0f, 2000.0f));
+        setReal (IDs::body, chance (0.4f) ? uni (0.1f, 0.6f) : 0.0f);
+        if (pad) parts.add ("PAD");
+    }
+    const bool doA = all || scope == RandEngineA, doB = all || scope == RandEngineB, doC = all || scope == RandEngineC;
+    if (doA)
+    {
+        const int m = r.nextInt (7);
+        setReal (IDs::aModel, (float) m);
+        setReal (IDs::aExciter, shape == 4 ? 5.0f : (float) r.nextInt (5));
+        setReal (IDs::aStructure, uni (0.05f, 0.85f));
+        setReal (IDs::aBright, uni (0.2f, 0.85f));
+        setReal (IDs::aDamping, uni (0.15f, 0.7f));
+        setReal (IDs::aPosition, uni (0.05f, 0.7f));
+        if (! all || shape != 1) parts.add (apvts.getParameter (IDs::aModel)->getCurrentValueAsText().toUpperCase());
+    }
+    if (doB)
+    {
+        setReal (IDs::bModel, (float) r.nextInt (12));
+        setReal (IDs::bExciter, (float) r.nextInt (4));
+        setReal (IDs::bMaterial, uni (0.1f, 0.9f));
+        setReal (IDs::bDecay, uni (0.2f, 0.7f));
+        setReal (IDs::bTone, uni (0.3f, 0.85f));
+        setReal (IDs::bPosition, uni (0.05f, 0.7f));
+        setReal (IDs::bSpread, chance (0.3f) ? uni (0.05f, 0.4f) : 0.0f);
+        setReal (IDs::bSweep, chance (0.25f) ? uni (0.05f, 0.35f) : 0.0f);
+        if (! all || shape != 0) parts.add (apvts.getParameter (IDs::bModel)->getCurrentValueAsText().toUpperCase());
+    }
+    if (doC)
+    {
+        setReal (IDs::cModel, (float) r.nextInt (24));
+        setReal (IDs::cHarm, uni (0.15f, 0.85f));
+        setReal (IDs::cTimbre, uni (0.15f, 0.85f));
+        setReal (IDs::cMorph, uni (0.15f, 0.85f));
+        setReal (IDs::cFm, chance (0.2f) ? uni (-0.4f, 0.4f) : 0.0f);
+        setReal (IDs::cTimbreMod, chance (0.3f) ? uni (-0.5f, 0.5f) : 0.0f);
+        setReal (IDs::cMorphMod, chance (0.3f) ? uni (-0.5f, 0.5f) : 0.0f);
+        setReal (IDs::cDecay, uni (0.15f, 0.75f));
+        setReal (IDs::cColour, uni (0.2f, 0.8f));
+        setReal (IDs::cLpg, chance (0.8f) ? 1.0f : 0.0f);
+        if (scope == RandEngineC && get (IDs::cMix) < 0.05f) setReal (IDs::cMix, 0.5f);   // que se escuche
+        if (! all || shape >= 3 || get (IDs::cMix) > 0.05f)
+            parts.add (apvts.getParameter (IDs::cModel)->getCurrentValueAsText().toUpperCase());
+    }
+    if (all || scope == RandFx)
+    {
+        setReal (IDs::chorusMix, chance (0.4f) ? uni (0.1f, 0.45f) : 0.0f);
+        setReal (IDs::glitchOn, chance (0.12f) ? 1.0f : 0.0f);
+        setReal (IDs::glitchProb, uni (0.1f, 0.4f));
+        setReal (IDs::delayOn, chance (0.7f) ? 1.0f : 0.0f);
+        setReal (IDs::delayMix, uni (0.08f, 0.35f));
+        setReal (IDs::delayFb, uni (0.2f, 0.6f));
+        setReal (IDs::delayWow, uni (0.0f, 0.4f));
+        setReal (IDs::springOn, chance (0.7f) ? 1.0f : 0.0f);
+        setReal (IDs::springMix, uni (0.08f, 0.35f));
+        setReal (IDs::springDecay, logu (0.8f, 4.0f));
+        setReal (IDs::plateOn, chance (0.25f) ? 1.0f : 0.0f);
+        setReal (IDs::plateMix, uni (0.1f, 0.35f));
+        setReal (IDs::texOn, chance (0.1f) ? 1.0f : 0.0f);
+        setReal (IDs::texMix, uni (0.2f, 0.5f));
+        if (scope == RandFx) parts.add ("FX");
+    }
+    if (all || scope == RandMod)
+    {
+        // LFOs nuevos y, a veces, un cable de LFO a algo que se note
+        for (int i = 0; i < kNumLfos; ++i)
+        {
+            setReal (IDs::lfo (i, "Shape").toRawUTF8(), (float) r.nextInt (6));
+            setReal (IDs::lfo (i, "Rate").toRawUTF8(), logu (0.05f, 6.0f));
+            setReal (IDs::lfo (i, "Depth").toRawUTF8(), uni (-0.5f, 0.5f));
+        }
+        clearPatches();
+        static const int dests[] { DAPosition, DABright, DBMaterial, DBTone, DCutoff, DCTimbre, DCMorph };
+        const int cables = all ? r.nextInt (3) : 1 + r.nextInt (2);
+        for (int k = 0; k < cables; ++k)
+            addPatch (r.nextInt (2), dests[r.nextInt (7)], uni (0.1f, 0.45f) * (chance (0.25f) ? -1.0f : 1.0f));
+        if (scope == RandMod) parts.add (juce::String (cables) + (cables == 1 ? " CABLE" : " CABLES"));
+    }
+
+    // Como un preset nuevo: secuenciador apagado, volumen a -20 dB y un nivel propio parejo
+    if (all)
+    {
+        const SuppressTouch st (*this);
+        setParamValue (IDs::seqOn, 0.0f);
+        setParamValue (IDs::limiterOn, 1.0f);
+        presetTrimDb = randomTrimDb;
+        setStartVolume();
+        presetIndex = -1;
+        userPresetName = "Random";
+    }
+    // Nivelado: se mide en un procesador aparte y se corrige el nivel propio para que suene como los presets
+    {
+        constexpr float target = -23.0f;
+        const float level = measureSoundLevelDb();
+        if (level < -75.0f && all && ++rerolls < 4)   // casi mudo: otra tirada
+            return randomizeSound (scope, vary);
+        rerolls = 0;
+        if (level > -75.0f)
+            presetTrimDb = juce::jlimit (-12.0f, 30.0f, presetTrimDb.load() + (target - level));
+    }
+    presetDirty = true;
+    return parts.isEmpty() ? juce::String ("NEW SOUND") : parts.joinIntoString (" + ");
+}
+
 //==============================================================================
 void URingAudioProcessor::loadPreset (int index)
 {

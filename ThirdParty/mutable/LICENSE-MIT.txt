@@ -31,3 +31,6 @@ URing modifications: clouds/dsp/correlator.cc skips the 32-bit shift when offset
 URing modifications: clouds/dsp/looping_sample_player.h computes the fractional read position with unsigned shifts (signed overflow).
 URing modifications: stmlib/fft/shy_fft.h negative indices use signed offsets; clouds/dsp/pvoc/frame_transformation.cc wraps the phase increment through int32 (undefined float-to-uint16 conversion).
 URing modifications: plaits/dsp/fm/algorithms.h skips the explicit-specialization declarations under MSVC (C2737).
+URing modifications: plaits/dsp/speech/lpc_speech_synth_controller.cc clamps the scan address and plays non-interpolated frames without reading past the last one (out-of-bounds read).
+URing modifications: clouds/dsp/grain.h initializes recommended_quality_ in Init() (read before the first Start()).
+URing modifications: clouds/dsp/granular_processor.cc zeroes the feedback buffer in Init() and drops non-finite / runaway samples before feedback.

@@ -222,6 +222,15 @@ public:
     juce::String popLearnEvent();
 
     void loadPreset (int index);
+
+    // ---- RANDOM (dado): sonido nuevo al azar dentro de rangos musicales, o una variación del actual.
+    // scope: qué se sortea. vary = true: mueve un poco lo que ya hay. Devuelve una descripción para la pantalla.
+    enum RandomScope { RandAll = 0, RandEngineA, RandEngineB, RandEngineC, RandFx, RandMod };
+    juce::String randomizeSound (RandomScope scope, bool vary);
+    int rerolls = 0;
+    static inline float randomTrimDb = 12.0f;   // nivel de partida de un sonido al azar (después se mide y se corrige)
+    // Mide (sin sonar) el nivel del sonido actual con un acorde corto, en dB (ventana de 400 ms más fuerte)
+    float measureSoundLevelDb();
     void generatePattern (juce::Random& r);
     void generatePattern()                { juce::Random r; generatePattern (r); }
 
