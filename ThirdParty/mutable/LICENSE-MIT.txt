@@ -30,3 +30,4 @@ URing modifications: clouds/dsp/grain.h clamps the window table index below 1.0 
 URing modifications: clouds/dsp/correlator.cc skips the 32-bit shift when offset_bits is 0 (undefined behaviour).
 URing modifications: clouds/dsp/looping_sample_player.h computes the fractional read position with unsigned shifts (signed overflow).
 URing modifications: stmlib/fft/shy_fft.h negative indices use signed offsets; clouds/dsp/pvoc/frame_transformation.cc wraps the phase increment through int32 (undefined float-to-uint16 conversion).
+URing modifications: plaits/dsp/fm/algorithms.h skips the explicit-specialization declarations under MSVC (C2737).

@@ -195,6 +195,9 @@ class Algorithms {
   DISALLOW_COPY_AND_ASSIGN(Algorithms);
 };
 
+// MSVC toma estas declaraciones de especializaciones como definiciones sin valor (C2737):
+// en Windows se omiten y las definiciones de algorithms.cc alcanzan.
+#ifndef _MSC_VER
 /* static */
 template<> const uint8_t Algorithms<4>::opcodes_[][4];  // From DX100
 
@@ -206,6 +209,7 @@ template<> const uint8_t Algorithms<6>::opcodes_[][6];  // From DX7
 
 /* static */
 template<> const Algorithms<6>::RendererSpecs Algorithms<6>::renderers_[];
+#endif  // _MSC_VER
 
 }  // namespace fm
 
