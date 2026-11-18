@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CCRing · CCR</title>
+<meta name="description" content="CCRing: free and open-source physical-modelling synth for Mac and Windows (VST3 / AU / CLAP). Sinte de modelado físico gratis.">
+<meta property="og:title" content="CCRing — free physical-modelling synth by CCR">
+<meta property="og:description" content="Three engines, a per-step model sequencer, a dice for random sounds and 165 presets. Free for Mac & Windows.">
+<meta property="og:image" content="img/synth_en.jpg">
+<link rel="icon" href="img/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0b0c0e; --panel:#15171b; --line:#26292f; --text:#eeeeee; --dim:#a3a8b0; --accent:#ff6a2b; --green:#7be3a5; --blue:#7fb2ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:Montserrat, Helvetica, Arial, sans-serif; line-height:1.55; }
+  a { color:var(--accent); }
+  .wrap { max-width:1120px; margin:0 auto; padding:0 20px; }
+  header { display:flex; align-items:center; justify-content:space-between; padding:22px 0; }
+  .brand { display:flex; align-items:center; gap:14px; font-weight:800; letter-spacing:.25em; font-size:20px; }
+  .brand img { height:44px; }
+  .lang button { background:none; border:1px solid var(--line); color:var(--dim); font:600 12px Montserrat; letter-spacing:.12em; padding:7px 12px; border-radius:6px; cursor:pointer; }
+  .lang button.on { background:var(--accent); color:#000; border-color:var(--accent); }
+  .hero { text-align:center; padding:40px 0 30px; }
+  .hero img.logo { width:min(420px, 80%); }
+  .hero h1 { font-size:clamp(44px, 9vw, 92px); letter-spacing:.18em; margin:10px 0 4px; font-weight:800; }
+  .hero p.sub { color:var(--dim); font-size:clamp(16px, 2.4vw, 21px); margin:0 auto 26px; max-width:720px; }
+  .btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .btn { display:inline-block; padding:14px 22px; border-radius:10px; font-weight:800; letter-spacing:.08em; text-decoration:none; font-size:14px; }
+  .btn.main { background:var(--accent); color:#000; }
+  .btn.ghost { border:1px solid var(--line); color:var(--text); }
+  .meta { color:var(--dim); font-size:13px; margin-top:14px; letter-spacing:.06em; }
+  .shot { margin:34px 0; border-radius:14px; overflow:hidden; border:1px solid var(--line); box-shadow:0 20px 60px rgba(0,0,0,.5); }
+  .shot img, .shot video { display:block; width:100%; height:auto; }
+  h2 { font-size:clamp(24px, 4vw, 34px); margin:56px 0 18px; }
+  h2 span { color:var(--accent); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px; }
+  .card h3 { margin:0 0 8px; font-size:17px; }
+  .card p { margin:0; color:var(--dim); font-size:14.5px; }
+  .card .tag { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px; }
+  .gallery { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:14px; }
+  .gallery figure { margin:0; background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .gallery img { width:100%; display:block; }
+  .gallery figcaption { padding:10px 14px; color:var(--dim); font-size:13px; font-weight:600; letter-spacing:.08em; }
+  .dl { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:16px; }
+  .donate { text-align:center; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:28px 20px; margin:56px 0; }
+  .donate code { background:#000; padding:4px 10px; border-radius:6px; color:var(--green); font-size:16px; }
+  footer { color:var(--dim); font-size:12.5px; padding:30px 0 50px; border-top:1px solid var(--line); }
+  [data-lang] { display:none; }
+  body.es [data-lang="es"], body.en [data-lang="en"] { display:revert; }
+</style>
+</head>
+<body class="es">
+<div class="wrap">
+  <header>
+    <div class="brand"><img src="img/ccr_logo.png" alt="CCR"> CCR</div>
+    <div class="lang"><button id="b-es" class="on" onclick="setLang('es')">ESPAÑOL</button> <button id="b-en" onclick="setLang('en')">ENGLISH</button></div>
+  </header>
+
+  <section class="hero">
+    <img class="logo" src="img/ccr_logo.png" alt="CCR">
+    <h1>CCRING</h1>
+    <p class="sub" data-lang="es">Sinte de modelado físico <b>gratis y de código libre</b>. Cuerdas, maderas, metales y parches simulados, 24 modelos de síntesis y un secuenciador pensado para minimal.</p>
+    <p class="sub" data-lang="en">A <b>free and open-source</b> physical-modelling synth. Simulated strings, woods, metals and drums, 24 synthesis models and a sequencer made for minimal house.</p>
+    <div class="btns">
+      <a class="btn main" href="https://github.com/javicazou/CCRing/releases/latest"><span data-lang="es">DESCARGAR GRATIS</span><span data-lang="en">FREE DOWNLOAD</span></a>
+      <a class="btn ghost" href="#video"><span data-lang="es">VER EN 1 MINUTO</span><span data-lang="en">WATCH IN 1 MINUTE</span></a>
+    </div>
+    <div class="meta">Mac (Intel & Apple Silicon) · Windows 10/11 · VST3 · AU · CLAP · Standalone · v1.5.0</div>
+  </section>
+
+  <div class="shot"><img data-lang="es" src="img/synth_es.jpg" alt="CCRing"><img data-lang="en" src="img/synth_en.jpg" alt="CCRing"></div>
+
+  <h2 data-lang="es">Tres motores que se <span>excitan entre sí</span></h2>
+  <h2 data-lang="en">Three engines that <span>drive each other</span></h2>
+  <div class="grid">
+    <div class="card"><h3><span class="tag" style="background:var(--accent)"></span><span data-lang="es">A · Resonador</span><span data-lang="en">A · Resonator</span></h3>
+      <p data-lang="es">Cuerda, modal, cuerdas simpáticas, metal, piano, tine y lengüeta, con púa, golpe, arco, soplido, martillo o el motor C como excitador.</p>
+      <p data-lang="en">String, modal, sympathetic strings, metal, piano, tine and reed — plucked, struck, bowed, blown, hammered or driven by engine C.</p></div>
+    <div class="card"><h3><span class="tag" style="background:#3fd8ff"></span><span data-lang="es">B · Impacto</span><span data-lang="en">B · Impact</span></h3>
+      <p data-lang="es">Parche, barra, placa, campana, tubo, vidrio, marimba, vibráfono, mbira, steel pan, tambor de mano y gong.</p>
+      <p data-lang="en">Membrane, bar, plate, bell, tube, glass, marimba, vibes, mbira, steel pan, hand drum and gong.</p></div>
+    <div class="card"><h3><span class="tag" style="background:var(--green)"></span><span data-lang="es">C · 24 modelos</span><span data-lang="en">C · 24 models</span></h3>
+      <p data-lang="es">Basados en Plaits de Mutable Instruments: analógico virtual, FM, wavetable, acordes, voz, ruidos, bombo, redoblante y hi-hat.</p>
+      <p data-lang="en">Based on Mutable Instruments Plaits: virtual analog, FM, wavetable, chords, speech, noise, kick, snare and hi-hat.</p></div>
+  </div>
+
+  <h2 data-lang="es">Novedades de la <span>1.5</span></h2>
+  <h2 data-lang="en">New in <span>1.5</span></h2>
+  <div class="grid">
+    <div class="card"><h3>🥁 <span data-lang="es">Carril MOD</span><span data-lang="en">MOD lane</span></h3><p data-lang="es">Otro modelo del motor C en cada paso: una batería entera desde un solo secuenciador.</p><p data-lang="en">A different engine C model on every step: a whole drum kit from one sequencer.</p></div>
+    <div class="card"><h3>🎲 <span data-lang="es">El dado</span><span data-lang="en">The dice</span></h3><p data-lang="es">Un clic, un sonido nuevo: siempre musical y con el volumen parejo. Si no te gusta, deshacés.</p><p data-lang="en">One click, one new sound — always musical and level-matched. Don't like it? Undo.</p></div>
+    <div class="card"><h3>🪐 <span data-lang="es">Motor C como excitador</span><span data-lang="en">Engine C as exciter</span></h3><p data-lang="es">Un oscilador FM frotando una cuerda, un bombo golpeando un gong.</p><p data-lang="en">An FM oscillator bowing a string, a kick drum striking a gong.</p></div>
+    <div class="card"><h3>🔌 <span data-lang="es">Cables</span><span data-lang="en">Cables</span></h3><p data-lang="es">A la vista, transparentes u ocultos; el mouse sobre un jack muestra lo conectado.</p><p data-lang="en">Shown, faded or hidden; hover a jack to see what's patched.</p></div>
+  </div>
+
+  <h2 id="video" data-lang="es">CCRing <span>en 1 minuto</span></h2>
+  <h2 data-lang="en">CCRing <span>in 1 minute</span></h2>
+  <div class="shot"><video data-lang="es" src="img/ccring_es.mp4" controls preload="metadata" poster="img/synth_es.jpg"></video><video data-lang="en" src="img/ccring_en.mp4" controls preload="metadata" poster="img/synth_en.jpg"></video></div>
+
+  <h2 data-lang="es">Todas las <span>pantallas</span></h2>
+  <h2 data-lang="en">All the <span>pages</span></h2>
+  <div class="gallery">
+    <figure><img data-lang="es" src="img/macro_es.jpg" alt=""><img data-lang="en" src="img/macro_en.jpg" alt=""><figcaption data-lang="es">MOTOR C · 24 MODELOS</figcaption><figcaption data-lang="en">ENGINE C · 24 MODELS</figcaption></figure>
+    <figure><img data-lang="es" src="img/seq_es.jpg" alt=""><img data-lang="en" src="img/seq_en.jpg" alt=""><figcaption data-lang="es">SECUENCIADOR EUCLIDIANO</figcaption><figcaption data-lang="en">EUCLIDEAN SEQUENCER</figcaption></figure>
+    <figure><img data-lang="es" src="img/live_es.jpg" alt=""><img data-lang="en" src="img/live_en.jpg" alt=""><figcaption data-lang="es">VIVO · MACROS · MORPH · PAD X/Y</figcaption><figcaption data-lang="en">LIVE · MACROS · MORPH · X/Y PAD</figcaption></figure>
+    <figure><img data-lang="es" src="img/fx_es.jpg" alt=""><img data-lang="en" src="img/fx_en.jpg" alt=""><figcaption data-lang="es">EFECTOS</figcaption><figcaption data-lang="en">EFFECTS</figcaption></figure>
+    <figure><img data-lang="es" src="img/texture_es.jpg" alt=""><img data-lang="en" src="img/texture_en.jpg" alt=""><figcaption data-lang="es">TEXTURA GRANULAR · PLACA</figcaption><figcaption data-lang="en">GRANULAR TEXTURE · PLATE</figcaption></figure>
+  </div>
+
+  <h2 data-lang="es">Descargar</h2>
+  <h2 data-lang="en">Download</h2>
+  <div class="dl">
+    <div class="card"><h3>🍎 Mac</h3><p data-lang="es">Intel y Apple Silicon, macOS 11 o superior. Instalador .pkg con VST3, AU, CLAP y app suelta.</p><p data-lang="en">Intel and Apple Silicon, macOS 11 or later. .pkg installer with VST3, AU, CLAP and standalone app.</p><p style="margin-top:14px"><a class="btn main" href="https://github.com/javicazou/CCRing/releases/latest">CCRing-1.5.0-Mac.zip</a></p></div>
+    <div class="card"><h3>🪟 Windows</h3><p data-lang="es">Windows 10/11 de 64 bits. VST3, CLAP y app suelta, con instalador .bat.</p><p data-lang="en">Windows 10/11 64-bit. VST3, CLAP and standalone app, with a .bat installer.</p><p style="margin-top:14px"><a class="btn main" href="https://github.com/javicazou/CCRing/releases/latest">CCRing-1.5.0-Windows.zip</a></p></div>
+    <div class="card"><h3>📖 <span data-lang="es">Manual y código</span><span data-lang="en">Manual & code</span></h3><p data-lang="es">Manual en español e inglés. Código fuente libre (AGPL-3.0).</p><p data-lang="en">Manual in English and Spanish. Open-source code (AGPL-3.0).</p><p style="margin-top:14px"><a class="btn ghost" href="https://github.com/javicazou/CCRing">GitHub</a></p></div>
+  </div>
+
+  <div class="donate">
+    <h2 style="margin-top:0" data-lang="es">¿Te sirve? <span>Apoyalo ♥</span></h2>
+    <h2 style="margin-top:0" data-lang="en">Useful? <span>Support it ♥</span></h2>
+    <p data-lang="es">CCRing es y va a seguir siendo gratis. Una donación ayuda a que siga creciendo.</p>
+    <p data-lang="en">CCRing is and will stay free. A donation helps it keep growing.</p>
+    <p><a class="btn main" href="https://paypal.me/JavierCazou">PAYPAL</a></p>
+    <p>Mercado Pago (Argentina) · alias <code>nodrama.perro</code></p>
+  </div>
+
+  <footer>
+    <span data-lang="es">CCRing © 2026 CCR · Software libre (GNU AGPL-3.0). El motor C, TEXTURA y MARBLES usan código abierto de Plaits, Clouds y Marbles de Mutable Instruments (Émilie Gillet, MIT); CCRing no está afiliado a Mutable Instruments. Tipografía Montserrat (SIL OFL).</span>
+    <span data-lang="en">CCRing © 2026 CCR · Free software (GNU AGPL-3.0). Engine C, TEXTURE and MARBLES use open-source code from Plaits, Clouds and Marbles by Mutable Instruments (Émilie Gillet, MIT); CCRing is not affiliated with Mutable Instruments. Montserrat typeface (SIL OFL).</span>
+  </footer>
+</div>
+<script>
+  function setLang (l) {
+    document.body.className = l;
+    document.documentElement.lang = l;
+    document.getElementById('b-es').className = l === 'es' ? 'on' : '';
+    document.getElementById('b-en').className = l === 'en' ? 'on' : '';
+    try { localStorage.setItem('ccring-lang', l); } catch (e) {}
+  }
+  try {
+    const saved = localStorage.getItem('ccring-lang');
+    setLang (saved || ((navigator.language || 'es').startsWith('es') ? 'es' : 'en'));
+  } catch (e) {}
+</script>
+</body>
+</html>
