@@ -228,6 +228,9 @@ public:
         r.removeFromTop (8);
         padsRow = r.removeFromTop (40);
         r.removeFromTop (10);
+        // 1.5: vista previa de los 9 carriles abajo (clic en una fila = editar ese carril)
+        overviewArea = r.removeFromBottom (cz::kNumValueLanes * kOverviewRow + 6);
+        r.removeFromBottom (10);
         laneArea = r;
     }
 
@@ -250,7 +253,7 @@ public:
         g.drawText (mm::lang::tr ("STEP"), labelCol.withY (padsRow.getY()).withHeight (padsRow.getHeight()), Justification::centredLeft);
         g.drawText (mm::lang::tr ("PATTERN"), Rectangle<int> (content.getX() + 3 + kPages * 128 + 8, pagesRow.getY(), 62, pagesRow.getHeight()),
                     Justification::centredLeft);
-        g.drawText (names[lane], labelCol.withY (laneArea.getY()).withHeight (20), Justification::centredLeft);
+        g.drawText (mm::lang::tr (names[lane]), labelCol.withY (laneArea.getY()).withHeight (20), Justification::centredLeft);
 
         // Páginas: blanca = la que se edita, gris = dentro de STEPS, naranja = la que suena
         const int numPages = (len + kCols - 1) / kCols;
@@ -382,7 +385,7 @@ public:
                     {
                         const float y = valueToY (modelToValue (d.model));
                         const auto block = Rectangle<float> (lr.getX(), y - 7.0f, lr.getWidth(), 14.0f);
-                        g.setColour (Palette::engineC.withMultipliedAlpha (la));
+                        g.setColour (cModelColour (d.model).withMultipliedAlpha (la));   // color del banco
                         g.fillRect (Rectangle<float>::leftTopRightBottom (lr.getX() + lr.getWidth() * 0.4f, y, lr.getRight() - lr.getWidth() * 0.4f, lr.getBottom()));
                         g.fillRect (block);
                         g.setColour (Colours::black.withAlpha (0.85f * la));
@@ -407,10 +410,86 @@ public:
                 }
             }
         }
+        paintOverview (g, seqAccent);
+    }
+
+    // Vista previa: una fila finita por carril con los 32 pasos de la página
+    void paintOverview (juce::Graphics& g, juce::Colour seqAccent)
+    {
+        using namespace juce;
+        g.setColour (Palette::lcdBg);
+        g.fillRoundedRectangle (overviewArea.toFloat().withLeft ((float) content.getX() - 2.0f), 3.0f);
+        for (int l = 0; l < cz::kNumValueLanes; ++l)
+        {
+            const auto row = overviewRow (l);
+            const bool sel = l == lane;
+            g.setColour (sel ? Palette::text : Palette::dim.withAlpha (0.75f));
+            g.setFont (uiFont (8.5f, true));
+            g.drawText (laneButtonText (l), Rectangle<int> (labelCol.getX(), row.getY(), labelCol.getWidth(), row.getHeight()), Justification::centredLeft);
+            const int ll = param (IDs::seqLaneLen[l]);
+            const int laneLen = ll > 0 ? ll : param (IDs::seqLength);
+            for (int c = 0; c < kCols; ++c)
+            {
+                const int i = page * kCols + c;
+                const auto d = proc.pattern().get (i);
+                const auto cell = column (c, row).toFloat().reduced (3.0f, 1.0f);
+                g.setColour (Palette::padOff.brighter (sel ? 0.12f : 0.0f));
+                g.fillRect (cell);
+                const float alpha = (i < laneLen ? 1.0f : 0.3f) * (sel ? 1.0f : 0.6f);
+                if ((cz::Lane) l == cz::Lane::Lock)
+                {
+                    if (d.lock == 0.0f) continue;
+                    const float mid = cell.getCentreY(), y = mid - d.lock * cell.getHeight() * 0.5f;
+                    g.setColour (seqAccent.withMultipliedAlpha (alpha));
+                    g.fillRect (Rectangle<float>::leftTopRightBottom (cell.getX(), jmin (mid, y), cell.getRight(), jmax (mid, y) + 1.0f));
+                    continue;
+                }
+                if ((cz::Lane) l == cz::Lane::Model)
+                {
+                    if (d.model < 0) continue;
+                    g.setColour (cModelColour (d.model).withMultipliedAlpha (alpha));
+                    g.fillRect (cell.withTrimmedTop (cell.getHeight() * (1.0f - modelToValue (d.model))));
+                    continue;
+                }
+                const float v = laneValue01 (l, d);
+                g.setColour (seqAccent.withMultipliedAlpha (alpha));
+                g.fillRect (cell.withTrimmedTop (cell.getHeight() * (1.0f - jlimit (0.08f, 1.0f, v))));
+            }
+        }
+    }
+
+    static float laneValue01 (int l, const cz::SeqPattern::Step& d)
+    {
+        switch ((cz::Lane) l)
+        {
+            case cz::Lane::Note:     return norm (d.semis, cz::SeqPattern::kMinNote, cz::SeqPattern::kMaxNote);
+            case cz::Lane::Octave:   return norm (d.octave, cz::SeqPattern::kMinOctave, cz::SeqPattern::kMaxOctave);
+            case cz::Lane::Velocity: return d.velocity;
+            case cz::Lane::Gate:     return d.gate / kMaxGate;
+            case cz::Lane::Prob:     return d.prob;
+            case cz::Lane::Ratchet:  return (float) d.ratchet / (float) cz::SeqPattern::kMaxRatchet;
+            case cz::Lane::Cond:     return (float) (d.cond + 1) / (float) cz::Cond::NumConds;
+            default:                 return 0.0f;
+        }
+    }
+
+    juce::Rectangle<int> overviewRow (int l) const
+    {
+        return { overviewArea.getX(), overviewArea.getY() + 3 + l * kOverviewRow, overviewArea.getWidth(), kOverviewRow - 1 };
     }
 
     void mouseDown (const juce::MouseEvent& e) override
     {
+        if (overviewArea.contains (e.getPosition()))
+        {
+            for (int l = 0; l < cz::kNumValueLanes; ++l)
+                if (overviewRow (l).contains (e.getPosition()))
+                {
+                    showLane (l);
+                    feedback ("LANE", names[l]);
+                }
+            return;
+        }
         if (pagesRow.contains (e.getPosition()))
         {
             for (int pg = 0; pg < kPages; ++pg)
@@ -467,6 +546,7 @@ public:
 
 private:
     static constexpr int kCols = 32; // pasos visibles a la vez
+    static constexpr int kOverviewRow = 14;   // alto de cada fila de la vista previa
     static constexpr float kMaxGate = cz::StepSequencer::kMaxGateSteps;
     static constexpr int kPages = cz::SeqPattern::kSteps / kCols;
     static constexpr const char* names[] { "NOTE", "OCTAVE", "VELOCITY", "GATE", "PROBABILITY", "RATCHET", "CONDITION", "LOCK", "C MODEL" };
@@ -684,7 +764,7 @@ private:
     juce::TextButton chainBtn { "CHAIN" }, copyBtn { "COPY" }, pasteBtn { "PASTE" };
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> chainAttachment;
     juce::Label chainField;
-    juce::Rectangle<int> labelCol, content, pagesRow, padsRow, laneArea, lengthArea, stepsArea;
+    juce::Rectangle<int> labelCol, content, pagesRow, padsRow, laneArea, overviewArea, lengthArea, stepsArea;
     int lane = 0, lastCol = -1, page = 0;
     bool dragPads = false, paintFlip = false;
 };

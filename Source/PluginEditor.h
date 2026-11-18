@@ -134,6 +134,8 @@ private:
                         browseBtn { mm::gui::IconButton::Icon::Browse }, cablesBtn { mm::gui::IconButton::Icon::Cables };
     void setCableView (int view, bool announce);
     int previewNote = -1, previewId = 0;
+    float ledFlash = 0.0f;   // LED del logo (titila al tempo)
+    int lastLedStep = -1;
     void playPreview (const juce::String& category);
     bool userActed = false;
     int undoCounter = 0;

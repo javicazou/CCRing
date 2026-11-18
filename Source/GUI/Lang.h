@@ -162,7 +162,7 @@ inline const std::unordered_map<juce::String, juce::String>& table()
         add ("MATERIAL ", "MATERIAL"); add ("SPACE", "ESPACIO");
         add ("SEQ 1  A", "SEQ 1  A"); add ("SEQ 2  B", "SEQ 2  B");
         // ---- grilla del secuenciador
-        add ("NOTE", "NOTA"); add ("OCT", "OCT"); add ("VELO", "VELO"); add ("RTCH", "RTCH"); add ("COND", "COND"); add ("LOCK", "LOCK"); add ("MODEL", "MODELO"); add ("C MODEL", "MODELO C");
+        add ("NOTE", "NOTA"); add ("OCT", "OCT"); add ("VELO", "VELO"); add ("RTCH", "RTCH"); add ("COND", "COND"); add ("LOCK", "LOCK"); add ("MODEL", "MODELO"); add ("C MODEL", "MODELO C"); add ("OCTAVE", "OCTAVA"); add ("VELOCITY", "VELOCIDAD"); add ("PROBABILITY", "PROBABILIDAD"); add ("RATCHET", "RATCHET"); add ("CONDITION", "CONDICIÓN");
         add ("KNOB MODEL", "MODELO DE LA PERILLA"); add ("C MODEL: a different engine C model on each step", "MODELO C: otro modelo del motor C en cada paso");
         add ("PAGE", "PÁGINA"); add ("STEP", "PASO"); add ("PATTERN", "PATRÓN"); add ("CHAIN", "CADENA"); add ("AUTO", "AUTO");
         add ("AUTO (= STEPS)", "AUTO (= PASOS)"); add ("FIT SCALE", "AJUSTAR ESCALA"); add ("RND LANE", "AZAR CARRIL"); add ("RND RHYTHM", "AZAR RITMO");

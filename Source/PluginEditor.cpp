@@ -4,6 +4,32 @@ using namespace mm::gui;
 
 namespace
 {
+    // Botón de modelo del motor C: color de su banco, nombre arriba y la forma de onda abajo
+    struct ModelButton : public juce::TextButton
+    {
+        ModelButton (const char* name, int m) : juce::TextButton (name), model (m)
+        {
+            const auto c = mm::gui::cModelColour (m);
+            setColour (juce::TextButton::buttonColourId, c.interpolatedWith (juce::Colour (0xff303237), 0.82f));
+            setColour (juce::TextButton::buttonOnColourId, c);
+            setColour (juce::TextButton::textColourOnId, juce::Colours::black);
+        }
+        void paintButton (juce::Graphics& g, bool over, bool down) override
+        {
+            auto& lf = getLookAndFeel();
+            const bool on = getToggleState();
+            lf.drawButtonBackground (g, *this, on ? findColour (juce::TextButton::buttonOnColourId) : findColour (juce::TextButton::buttonColourId), over, down);
+            auto r = getLocalBounds().toFloat().reduced (8.0f, 6.0f);
+            auto icon = r.removeFromBottom (r.getHeight() * 0.36f).reduced (r.getWidth() * 0.12f, 2.0f);
+            g.setColour (findColour (on ? juce::TextButton::textColourOnId : juce::TextButton::textColourOffId));
+            g.setFont (lf.getTextButtonFont (*this, 26));
+            g.drawFittedText (getButtonText(), r.toNearestInt(), juce::Justification::centred, 1);
+            mm::gui::drawCModelIcon (g, icon, model, on ? juce::Colours::black.withAlpha (0.7f)
+                                                         : mm::gui::cModelColour (model).withAlpha (over ? 1.0f : 0.75f));
+        }
+        const int model;
+    };
+
     constexpr int pageY = 70;
     constexpr int pageH = URingAudioProcessorEditor::baseH - pageY - 6;
 }
@@ -15,13 +41,14 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
     setLookAndFeel (&lnf);
     juce::LookAndFeel::setDefaultLookAndFeel (&lnf); // menús y ventanas emergentes también en Montserrat
 
-    canvas.painter = [] (juce::Graphics& g)
+    canvas.painter = [this] (juce::Graphics& g)
     {
         g.fillAll (Palette::bg);
         drawModulePanel (g, { 6.0f, 4.0f, (float) baseW - 12.0f, 56.0f }, {});
-        g.setColour (Palette::accent.withAlpha (0.35f));
-        g.fillEllipse (19.0f, 22.0f, 14.0f, 14.0f);
-        g.setColour (Palette::accent);
+        // LED del logo: con el secuenciador en marcha titila en cada tiempo
+        g.setColour (Palette::accent.withAlpha (0.35f + 0.5f * ledFlash));
+        g.fillEllipse (19.0f - 3.0f * ledFlash, 22.0f - 3.0f * ledFlash, 14.0f + 6.0f * ledFlash, 14.0f + 6.0f * ledFlash);
+        g.setColour (Palette::accent.interpolatedWith (juce::Colours::white, 0.45f * ledFlash));
         g.fillEllipse (22.0f, 25.0f, 8.0f, 8.0f);
         g.setColour (Palette::text);
         g.setFont (uiFont (20.0f).withExtraKerningFactor (0.25f));
@@ -208,7 +235,7 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
 
         fp.rows = { { ch, gl, dl, sr } };
         fp.rowTop = { 0 };
-        fp.rowHeight = { 330 };
+        fp.rowHeight = { 420 };   // 1.5: módulos más altos, analizador más chico
         fp.controlRows = 3;
         fp.cables = { { 0, 0, "OUT", 0, 1, "IN", juce::Colour (0xff3fd8ff) },
                       { 0, 1, "OUT", 0, 2, "IN", Palette::accent },
@@ -334,12 +361,11 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
         for (int k = 0; k < 24; ++k)
         {
             const int m = (k % 4) * 6 + k / 4;   // la sección llena por columnas: así los modelos quedan en filas de 6
-            auto b = std::make_unique<juce::TextButton> (shortNames[m]);
+            auto b = std::make_unique<ModelButton> (shortNames[m], m);
             b->setClickingTogglesState (true);
             b->setRadioGroupId (24024);
-            b->setColour (juce::TextButton::buttonOnColourId, Palette::engineC);
-            b->setColour (juce::TextButton::textColourOnId, juce::Colours::black);
-            b->setTooltip (cz::macroModelName (m));
+            b->setTooltip (juce::String (m + 1) + "  " + cz::macroModelName (m)
+                           + (m < 8 ? "  -  BANK 1" : m < 16 ? "  -  BANK 2" : "  -  BANK 3"));
             b->onClick = [this, m]
             {
                 auto* prm = proc.apvts.getParameter (IDs::cModel);
@@ -419,7 +445,7 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
         addChoice (tp, ou, IDs::quality, "QUALITY");
         tp.rows = { { tx, pl, ou } };
         tp.rowTop = { 0 };
-        tp.rowHeight = { 330 };
+        tp.rowHeight = { 420 };
         tp.controlRows = 3;
         tp.cables = { { 0, 0, "OUT", 0, 1, "IN", juce::Colour (0xff8fe3c8) },
                       { 0, 1, "OUT", 0, 2, "IN", Palette::accent } };
@@ -488,24 +514,25 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
 
     // ---- Layout a tamaño base; el escalado lo hace el transform del canvas
     canvas.setBounds (0, 0, baseW, baseH);
-    synthTab.setBounds (170, 17, 56, 28);
-    fxTab.setBounds (228, 17, 36, 28);
-    seqTab.setBounds (266, 17, 42, 28);
-    liveTab.setBounds (310, 17, 44, 28);
-    macroTab.setBounds (356, 17, 62, 28);
-    textureTab.setBounds (420, 17, 68, 28);
-    browseBtn.setBounds (492, 16, 30, 30);
-    prevPreset.setBounds (526, 16, 24, 30);
-    presetBox.setBounds (552, 16, 112, 30);
-    nextPreset.setBounds (666, 16, 24, 30);
-    undoBtn.setBounds (694, 16, 28, 30);
-    redoBtn.setBounds (724, 16, 28, 30);
-    saveBtn.setBounds (758, 16, 54, 30);
-    recBtn.setBounds (820, 16, 60, 30);
-    recLenBox.setBounds (884, 16, 72, 30);
-    miniMeter.setBounds (964, 12, 24, 40);
-    cablesBtn.setBounds (996, 16, 30, 30);
-    lcd.setBounds (1032, 12, baseW - 22 - 1032, 40);
+    // Pestañas compactas: el menú de presets gana ancho (los nombres largos se leen enteros)
+    synthTab.setBounds (168, 17, 52, 28);
+    fxTab.setBounds (222, 17, 34, 28);
+    seqTab.setBounds (258, 17, 40, 28);
+    liveTab.setBounds (300, 17, 42, 28);
+    macroTab.setBounds (344, 17, 62, 28);
+    textureTab.setBounds (408, 17, 66, 28);
+    browseBtn.setBounds (480, 16, 30, 30);
+    prevPreset.setBounds (514, 16, 24, 30);
+    presetBox.setBounds (540, 16, 150, 30);
+    nextPreset.setBounds (692, 16, 24, 30);
+    undoBtn.setBounds (720, 16, 28, 30);
+    redoBtn.setBounds (750, 16, 28, 30);
+    saveBtn.setBounds (784, 16, 56, 30);
+    recBtn.setBounds (846, 16, 58, 30);
+    recLenBox.setBounds (908, 16, 66, 30);
+    miniMeter.setBounds (980, 12, 22, 40);
+    cablesBtn.setBounds (1008, 16, 30, 30);
+    lcd.setBounds (1044, 12, baseW - 22 - 1044, 40);
     logoHotspot.setBounds (14, 8, 150, 44);
     canvas.addChildComponent (browser);
     browser.setBounds (16, pageY - 4, baseW - 32, pageH + 4);
@@ -518,11 +545,11 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
     }
     seqGrid.setBounds (0, 276, seqPage.getWidth(), seqPage.getHeight() - 280);
     // Zonas de abajo: analizador de salida (FX, MACRO) y pad X/Y + analizador (LIVE)
-    fxAnalyzer.setBounds (0, 342, fxPage.getWidth(), fxPage.getHeight() - 346);
+    fxAnalyzer.setBounds (0, 432, fxPage.getWidth(), fxPage.getHeight() - 436);
     macroAnalyzer.setBounds (0, 532, macroPage.getWidth(), macroPage.getHeight() - 536);
-    texAnalyzer.setBounds (0, 342, texturePage.getWidth(), texturePage.getHeight() - 346);
-    xyPad->setBounds (0, 312, 420, livePage.getHeight() - 316);
-    liveAnalyzer.setBounds (428, 312, livePage.getWidth() - 428, livePage.getHeight() - 316);
+    texAnalyzer.setBounds (0, 432, texturePage.getWidth(), texturePage.getHeight() - 436);
+    xyPad->setBounds (0, 312, 700, livePage.getHeight() - 316);   // 1.5: pad X/Y más grande, analizador más chico
+    liveAnalyzer.setBounds (708, 312, livePage.getWidth() - 708, livePage.getHeight() - 316);
     keyboard.setBounds (0, 0, 1, 1);
 
     // Perillas → parámetro, para mostrar en cian lo que está automatizado
@@ -743,6 +770,17 @@ void URingAudioProcessorEditor::timerCallback()
     lcd.setIdle (proc.getCurrentPresetName() + (proc.isPresetModified() ? " *" : ""), lcdWave.data(), (int) lcdWave.size());
     if (livePage.isVisible() && xyPad != nullptr) xyPad->refresh();
 
+    // LED del logo al tempo (cada 4 pasos del SEQ 1 = un tiempo en 1/16)
+    {
+        const int step = proc.sequencer.getCurrentStep();
+        const float old = ledFlash;
+        if (step >= 0 && step != lastLedStep && step % 4 == 0) ledFlash = 1.0f;
+        else ledFlash *= 0.6f;
+        if (ledFlash < 0.02f) ledFlash = 0.0f;
+        lastLedStep = step;
+        if (std::abs (ledFlash - old) > 1.0e-3f) canvas.repaint (12, 14, 30, 30);
+    }
+
     // Luces de las salidas (LFO / ENV) y cables
     if (synthPage.isVisible())
         synthPage.repaint();
@@ -809,7 +847,7 @@ void URingAudioProcessorEditor::addKnob (Page& page, Section& s, const juce::Str
 {
     auto k = std::make_unique<Knob> (proc.apvts, id, title, bipolar);
     k->slider.getProperties().set ("light", s.light);
-    if (s.light) k->label.setColour (juce::Label::textColourId, juce::Colour (0xff26272b));
+    if (s.light) k->label.setColour (juce::Label::textColourId, juce::Colour (0xff1a1b1e));
     k->slider.onValueChange = [this, id] { showParam (id); };
     k->slider.onRightClick  = [this, id] { showMidiMenu (id); };
     page.addAndMakeVisible (*k);
@@ -820,7 +858,7 @@ void URingAudioProcessorEditor::addKnob (Page& page, Section& s, const juce::Str
 void URingAudioProcessorEditor::addChoice (Page& page, Section& s, const juce::String& id, const char* title)
 {
     auto c = std::make_unique<ChoiceBox> (proc.apvts, id, title);
-    if (s.light) c->label.setColour (juce::Label::textColourId, juce::Colour (0xff26272b));
+    if (s.light) c->label.setColour (juce::Label::textColourId, juce::Colour (0xff1a1b1e));
     c->box.onChange = [this, id] { showParam (id); };
     page.addAndMakeVisible (*c);
     s.items.push_back (c.get());
@@ -830,7 +868,7 @@ void URingAudioProcessorEditor::addChoice (Page& page, Section& s, const juce::S
 void URingAudioProcessorEditor::addPad (Page& page, Section& s, const juce::String& id, const char* text, const char* title)
 {
     auto p = std::make_unique<Pad> (proc.apvts, id, text, title);
-    if (s.light) p->label.setColour (juce::Label::textColourId, juce::Colour (0xff26272b));
+    if (s.light) p->label.setColour (juce::Label::textColourId, juce::Colour (0xff1a1b1e));
     p->button.onClick = [this, id] { showParam (id); };
     page.addAndMakeVisible (*p);
     s.items.push_back (p.get());

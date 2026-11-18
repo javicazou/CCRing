@@ -17,7 +17,7 @@ namespace Palette
     inline const juce::Colour panel     { 0xff2a2c31 }; // aluminio anodizado
     inline const juce::Colour panelEdge { 0xff3d4047 };
     inline const juce::Colour text      { 0xffeeeeee }; // serigrafía
-    inline const juce::Colour dim       { 0xffa3a8b0 };
+    inline const juce::Colour dim       { 0xffb4b9c1 };   // 1.5: algo más claro (se lee mejor)
     inline const juce::Colour accent    { 0xffff6a2b }; // LED
     inline const juce::Colour green     { 0xffeeeeee };
     inline const juce::Colour amber     { 0xff8d9097 };
@@ -30,7 +30,65 @@ namespace Palette
     inline const juce::Colour engineA   { 0xffff6a2b };
     inline const juce::Colour engineB   { 0xff3fd8ff };
     inline const juce::Colour engineC   { 0xff7be3a5 };
+    // Bancos del motor C (como en Plaits): 1-8 sintes nuevos, 9-16 clásicos, 17-24 ruidos y percusión
+    inline const juce::Colour bank1     { 0xff7fb2ff };
+    inline const juce::Colour bank2     { 0xff7be3a5 };
+    inline const juce::Colour bank3     { 0xffffb35c };
 }
+// Color del banco de un modelo del motor C (0-23)
+inline juce::Colour cModelColour (int model)
+{
+    return model < 8 ? Palette::bank1 : model < 16 ? Palette::bank2 : Palette::bank3;
+}
+
+// Icono chico con la forma de onda típica de cada modelo del motor C
+inline void drawCModelIcon (juce::Graphics& g, juce::Rectangle<float> r, int m, juce::Colour c)
+{
+    using namespace juce;
+    const float tau = MathConstants<float>::twoPi;
+    auto frac = [] (float x) { return x - std::floor (x); };
+    auto saw = [&] (float x) { return 2.0f * frac (x) - 1.0f; };
+    auto noise = [] (float x) { const float v = std::sin (x * 12.9898f * 431.0f) * 43758.5453f; return 2.0f * (v - std::floor (v)) - 1.0f; };
+    auto f = [&] (float x) -> float
+    {
+        switch (m)
+        {
+            case 0:  return saw (2.0f * x);                                                   // VA + filtro
+            case 1:  return std::sin (tau * 2.0f * std::sqrt (frac (2.0f * x)) * 0.5f + tau * std::floor (2.0f * x) * 0.5f); // phase distortion
+            case 2: case 3: case 4: return std::sin (tau * 2.0f * x + (2.0f + (float) (m - 2)) * std::sin (tau * 4.0f * x)) ; // 6-op FM
+            case 5:  return std::sin (tau * 2.0f * x) * std::cos (tau * 3.0f * x);            // wave terrain
+            case 6:  return 0.5f * (saw (2.0f * x) + saw (2.06f * x + 0.3f));                 // string machine
+            case 7:  return std::sin (tau * 2.0f * x) >= 0.0f ? 0.8f : -0.8f;                 // chiptune
+            case 8:  return 1.0f - 4.0f * std::abs (frac (2.0f * x + 0.25f) - 0.5f);          // VA (triángulo)
+            case 9:  return std::sin (2.6f * std::sin (tau * 2.0f * x));                      // waveshaper
+            case 10: return std::sin (tau * 2.0f * x + 1.6f * std::sin (tau * 2.0f * x));     // FM 2 op
+            case 11: return std::sin (tau * 9.0f * x) * std::max (0.0f, std::sin (tau * 3.0f * x)); // granos / formante
+            case 12: { float v = 0; for (int k = 1; k <= 5; ++k) v += std::sin (tau * 2.0f * k * x) / (float) k; return v * 0.6f; } // aditivo
+            case 13: return 0.7f * std::sin (tau * 2.0f * x) + 0.3f * std::sin (tau * 7.0f * x); // wavetable
+            case 14: return (std::sin (tau * 2.0f * x) + std::sin (tau * 2.52f * x) + std::sin (tau * 3.0f * x)) / 2.4f; // acordes
+            case 15: return std::sin (tau * 11.0f * x) * std::pow (std::max (0.0f, std::sin (MathConstants<float>::pi * 2.0f * x)), 2.0f); // voz
+            case 16: { float v = 0; for (int k = 0; k < 4; ++k) v += saw ((2.0f + 0.07f * k) * x + 0.2f * k); return v * 0.3f; } // swarm
+            case 17: return noise (x) * 0.8f;                                                 // ruido filtrado
+            case 18: { const float n = noise (std::floor (x * 24.0f) / 24.0f); return n > 0.55f ? n : 0.0f; } // partículas
+            case 19: return std::exp (-3.0f * x) * (std::sin (tau * 5.0f * x) + 0.5f * std::sin (tau * 13.1f * x)) * 0.7f; // cuerda inarmónica
+            case 20: return std::exp (-3.0f * x) * std::sin (tau * 6.0f * x);                 // modal
+            case 21: return std::exp (-3.5f * x) * std::sin (tau * (1.2f * x + 1.6f * (1.0f - std::exp (-6.0f * x)))); // bombo
+            case 22: return std::exp (-5.0f * x) * noise (x);                                 // redoblante
+            default: return std::exp (-11.0f * x) * noise (x);                                // hi-hat
+        }
+    };
+    Path p;
+    constexpr int n = 48;
+    for (int i = 0; i <= n; ++i)
+    {
+        const float x = (float) i / n;
+        const auto pt = Point<float> (r.getX() + x * r.getWidth(), r.getCentreY() - jlimit (-1.0f, 1.0f, f (x)) * r.getHeight() * 0.5f);
+        if (i == 0) p.startNewSubPath (pt); else p.lineTo (pt);
+    }
+    g.setColour (c);
+    g.strokePath (p, PathStrokeType (1.3f, PathStrokeType::curved, PathStrokeType::rounded));
+}
+
 
 // Tipografía de todo el plugin: Montserrat Bold (incrustada; licencia OFL)
 inline juce::Typeface::Ptr montserratBold()
@@ -105,13 +163,13 @@ inline void drawJackLabel (juce::Graphics& g, juce::Point<float> c, const juce::
 {
     using namespace juce;
     const float r = 6.5f;
-    const auto area = labelBelow ? Rectangle<float> (c.x - 24.0f, c.y + r + 5.0f, 48.0f, 11.0f)
+    const auto area = labelBelow ? Rectangle<float> (c.x - 27.0f, c.y + r + 5.0f, 54.0f, 12.0f)
                                  : Rectangle<float> (c.x - 30.0f - r, c.y - 6.0f, 28.0f, 12.0f);
     const auto just = labelBelow ? Justification::centred : Justification::centredRight;
-    g.setFont (uiFont (8.5f, true));
+    g.setFont (uiFont (9.5f, true));
     g.setColour ((lightPanel ? Colours::white : Colours::black).withAlpha (0.55f));
     g.drawText (label, area.translated (0.0f, 1.0f), just);
-    g.setColour (isOutput ? Palette::accent : (lightPanel ? Colour (0xff222326) : Palette::dim));
+    g.setColour (isOutput ? Palette::accent : (lightPanel ? Colour (0xff151618) : Palette::dim));
     g.drawText (label, area, just);
 }
 

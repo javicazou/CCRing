@@ -46,10 +46,10 @@ public:
 
         label.setText (mm::lang::tr (title), dontSendNotification);
         label.setJustificationType (Justification::centred);
-        label.setFont (uiFont (11.0f));
+        label.setFont (uiFont (11.5f));
         label.setColour (Label::textColourId, Palette::dim);
         label.setInterceptsMouseClicks (false, false);
-        label.setMinimumHorizontalScale (0.7f);
+        label.setMinimumHorizontalScale (0.55f);
         addAndMakeVisible (label);
 
         attachment = std::make_unique<APVTS::SliderAttachment> (state, id, slider);
@@ -88,7 +88,7 @@ private:
     {
         stopTimer();
         label.setText (mm::lang::tr (titleText), juce::dontSendNotification);
-        label.setColour (juce::Label::textColourId, slider.getProperties()["light"] ? juce::Colour (0xff26272b) : Palette::dim);
+        label.setColour (juce::Label::textColourId, slider.getProperties()["light"] ? juce::Colour (0xff1a1b1e) : Palette::dim);
     }
 
     juce::String titleText;
@@ -114,7 +114,7 @@ public:
 
         label.setText (mm::lang::tr (title), dontSendNotification);
         label.setJustificationType (Justification::centred);
-        label.setFont (uiFont (10.0f));
+        label.setFont (uiFont (10.5f));
         label.setColour (Label::textColourId, Palette::dim);
         addAndMakeVisible (label);
 
@@ -161,7 +161,7 @@ public:
 
         label.setText (mm::lang::tr (title), dontSendNotification);
         label.setJustificationType (Justification::centred);
-        label.setFont (uiFont (10.0f));
+        label.setFont (uiFont (10.5f));
         label.setColour (Label::textColourId, Palette::dim);
         addAndMakeVisible (label);
 
