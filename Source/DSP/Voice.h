@@ -122,6 +122,8 @@ public:
             dice.aStruct = u (0.05f, 0.85f); dice.aBright = u (0.2f, 0.85f); dice.aDamp = u (0.15f, 0.7f); dice.aPos = u (0.05f, 0.7f);
             dice.bMat = u (0.1f, 0.9f); dice.bDecay = u (0.2f, 0.7f); dice.bTone = u (0.3f, 0.85f); dice.bPos = u (0.05f, 0.7f);
             dice.cHarm = u (0.15f, 0.85f); dice.cTimbre = u (0.15f, 0.85f); dice.cMorph = u (0.15f, 0.85f);
+            dice.cutOct = u (-1.5f, 1.2f);                              // más oscuro o más brillante
+            dice.decayMul = std::exp2 (u (-1.5f, 1.3f));                // más corto o más largo
         }
         vel = juce::jlimit (0.05f, 1.0f, velocity * (1.0f + offsets[OVel] * vp.variation * 0.35f));
 
@@ -173,7 +175,8 @@ public:
             macro.noteOff();
             env.noteOff();
         }
-        env.setParameters (vp.attack, vp.freeze ? 1.0e6f : vp.decay, vp.freeze ? 1.0f : vp.sustain, vp.release);
+        const float dMul = diced ? dice.decayMul : 1.0f;
+        env.setParameters (vp.attack, vp.freeze ? 1.0e6f : vp.decay * dMul, vp.freeze ? 1.0f : vp.sustain, vp.release * dMul);
         const float fenvCoef = std::exp (-1.0f / (std::max (1.0f, vp.fltEnvDecayMs) * 0.001f * sampleRate));
         const float velGain = 1.0f - vp.velSens + vp.velSens * vel;
         // Nota de un solo motor (dos secuenciadores): ese motor suena entero
@@ -213,7 +216,8 @@ public:
             updateEngines (n);
 
             const float cutoff = vp.cutoff * std::exp2 (vp.fltEnvAmt * fenv * 6.0f + vp.keyTrack * (note - 60.0f) / 12.0f
-                                                        + (lockDest == VoiceParams::LockCutoff ? lock * 3.0f : 0.0f));
+                                                        + (lockDest == VoiceParams::LockCutoff ? lock * 3.0f : 0.0f)
+                                                        + (diced ? dice.cutOct : 0.0f));
             const float air = vp.life * 0.0025f; // soplo: excita el resonador muy suavemente mientras la nota vive
             if (runA) filterA.set (cutoff, vp.resonance, vp.filterType);
             if (runB) filterB.set (cutoff, vp.resonance, vp.filterType);
@@ -362,7 +366,8 @@ private:
     bool diced = false;
     struct Dice { int aModel = 0, aExc = 0, bModel = 0, bExc = 0, cModel = 0;
                   float abMix = 0.5f, aStruct = 0.3f, aBright = 0.5f, aDamp = 0.4f, aPos = 0.3f,
-                        bMat = 0.4f, bDecay = 0.35f, bTone = 0.5f, bPos = 0.3f, cHarm = 0.5f, cTimbre = 0.5f, cMorph = 0.5f; } dice;
+                        bMat = 0.4f, bDecay = 0.35f, bTone = 0.5f, bPos = 0.3f, cHarm = 0.5f, cTimbre = 0.5f, cMorph = 0.5f,
+                        cutOct = 0.0f, decayMul = 1.0f; } dice;
     float excAgc = 1.0f, aFollow = 0.0f;   // control de nivel del motor C como excitador
     Noise airNoise;
     ResonatorEngine engA;

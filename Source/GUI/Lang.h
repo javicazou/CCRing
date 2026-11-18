@@ -179,7 +179,9 @@ inline const std::unordered_map<juce::String, juce::String>& table()
         add ("VARIATION (moves the current sound a little)", "VARIAR (mueve un poco el sonido actual)");
         add ("Vary everything", "Variar todo"); add ("Vary engines A / B", "Variar motores A / B"); add ("Vary engine C", "Variar motor C");
         add ("Vary effects", "Variar efectos");
-        add ("A new sound on every note", "Un sonido nuevo en cada nota"); add ("DICE ON EVERY NOTE", "DADO EN CADA NOTA");
+        add ("A new sound on every note", "Un sonido nuevo en cada nota");
+        add ("DICE", "DADO"); add ("EVERY NOTE", "CADA NOTA"); add ("ROLL", "SORTEAR");
+        add ("A new random sound for everything. Right-click: what to randomize, or a small variation", "Un sonido nuevo al azar para todo. Clic derecho: qué sortear, o una variación chica"); add ("DICE ON EVERY NOTE", "DADO EN CADA NOTA");
         add ("ON: EVERY NOTE IS A NEW SOUND", "PRENDIDO: CADA NOTA ES UN SONIDO NUEVO"); add ("VARIATION", "VARIACIÓN"); add ("C MODEL: a different engine C model on each step", "MODELO C: otro modelo del motor C en cada paso");
         add ("PAGE", "PÁGINA"); add ("STEP", "PASO"); add ("PATTERN", "PATRÓN"); add ("CHAIN", "CADENA"); add ("AUTO", "AUTO");
         add ("AUTO (= STEPS)", "AUTO (= PASOS)"); add ("FIT SCALE", "AJUSTAR ESCALA"); add ("RND LANE", "AZAR CARRIL"); add ("RND RHYTHM", "AZAR RITMO");

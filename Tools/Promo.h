@@ -244,4 +244,147 @@ inline int run (URingAudioProcessor& proc, const File& outDir, bool english)
     std::cout << "Promo: 3 videos in " << outDir.getFullPathName() << std::endl;
     return 0;
 }
+
+// ---------------------------------------------------------------- Videos con GANCHO (10-13 s, para viralizar)
+// Texto grande desde el primer cuadro, beat de minimal hecho con CCRing desde el arranque, cierre con
+// "Comentá CCR y te mando el link". URingDemo <carpeta> hooks [--en]
+inline Image hookFrame (const Image& shot, Rectangle<int> crop, const String& hook, const String& big, const String& small, Colour accent)
+{
+    Image img (Image::RGB, 1080, 1920, true);
+    Graphics g (img);
+    g.fillAll (Colour (0xff0b0c0e));
+    // gancho arriba, enorme
+    g.setColour (Colours::white);
+    g.setFont (mm::gui::uiFont (92.0f));
+    g.drawFittedText (hook, 50, 130, 980, 320, Justification::centred, 3, 0.8f);
+    // captura grande (recorte)
+    const auto src = crop.isEmpty() ? shot.getBounds() : (crop.toFloat() * 2.0f).toNearestInt();
+    const auto sub = shot.getClippedImage (src);
+    const float k = jmin (1040.0f / (float) sub.getWidth(), 820.0f / (float) sub.getHeight());
+    const auto area = Rectangle<float> ((float) sub.getWidth() * k, (float) sub.getHeight() * k).withCentre ({ 540.0f, 930.0f });
+    g.drawImage (sub, area, RectanglePlacement::stretchToFit);
+    g.setColour (accent);
+    g.drawRoundedRectangle (area.expanded (5.0f), 14.0f, 5.0f);
+    // número / dato grande
+    g.setColour (accent);
+    g.setFont (mm::gui::uiFont (130.0f));
+    g.drawText (big, 0, (int) area.getBottom() + 40, 1080, 150, Justification::centred);
+    g.setColour (Colours::white.withAlpha (0.9f));
+    g.setFont (mm::gui::uiFont (50.0f));
+    g.drawFittedText (small, 50, (int) area.getBottom() + 190, 980, 130, Justification::centred, 2, 0.75f);
+    // marca chica abajo
+    static const auto logo = ImageCache::getFromMemory (URingFonts::ccr_logo_png, URingFonts::ccr_logo_pngSize);
+    g.drawImage (logo, Rectangle<float> (330.0f, 1740.0f, 120.0f, 69.0f), RectanglePlacement::centred);
+    g.setColour (Colours::white.withAlpha (0.8f));
+    g.setFont (mm::gui::uiFont (44.0f).withExtraKerningFactor (0.15f));
+    g.drawText ("CCRING", 465, 1745, 400, 60, Justification::centredLeft);
+    return img;
+}
+
+inline Image ctaCard (bool english)
+{
+    Image img (Image::RGB, 1080, 1920, true);
+    Graphics g (img);
+    g.fillAll (Colour (0xff0b0c0e));
+    static const auto logo = ImageCache::getFromMemory (URingFonts::ccr_logo_png, URingFonts::ccr_logo_pngSize);
+    g.drawImage (logo, Rectangle<float> (190.0f, 260.0f, 700.0f, 404.0f), RectanglePlacement::centred);
+    g.setColour (Colours::white);
+    g.setFont (mm::gui::uiFont (110.0f).withExtraKerningFactor (0.18f));
+    g.drawText ("CCRING", 0, 720, 1080, 130, Justification::centred);
+    g.setColour (Colour (0xffff6a2b));
+    g.setFont (mm::gui::uiFont (64.0f));
+    g.drawText (english ? "100% FREE" : "100% GRATIS", 0, 880, 1080, 80, Justification::centred);
+    g.setColour (Colours::white);
+    g.setFont (mm::gui::uiFont (78.0f));
+    g.drawFittedText (english ? U ("COMMENT \xe2\x80\x9c" "CCR\xe2\x80\x9d\nAND I'LL SEND YOU\nTHE LINK") : U ("COMENT\xc3\x81 \xe2\x80\x9c" "CCR\xe2\x80\x9d\nY TE MANDO\nEL LINK"),
+                      60, 1040, 960, 340, Justification::centred, 3, 0.8f);
+    g.setColour (Colours::white.withAlpha (0.6f));
+    g.setFont (mm::gui::uiFont (34.0f));
+    g.drawText (english ? U ("Mac & Windows  \xc2\xb7  VST3 / AU / CLAP") : U ("Mac y Windows  \xc2\xb7  VST3 / AU / CLAP"), 0, 1460, 1080, 50, Justification::centred);
+    g.drawText ("javicazou.github.io/CCRing", 0, 1520, 1080, 50, Justification::centred);
+    return img;
+}
+
+// Beat de minimal hecho con CCRing (Plaits Kit Walk) para que suene desde el primer cuadro
+inline AudioBuffer<float> beatBed (double secs)
+{
+    URingAudioProcessor bed;
+    bed.loadPreset (findPresetIdx ("Plaits Kit Walk"));
+    return renderSound (bed, secs, true);
+}
+
+inline void mixInto (AudioBuffer<float>& dst, const AudioBuffer<float>& src, float gainDb)
+{
+    const int n = jmin (dst.getNumSamples(), src.getNumSamples());
+    for (int c = 0; c < 2; ++c) dst.addFrom (c, 0, src, c, 0, n, Decibels::decibelsToGain (gainDb));
+}
+
+inline int runHooks (URingAudioProcessor& proc, const File& outDir, bool english)
+{
+    mm::lang::currentRef() = english ? mm::lang::Lang::English : mm::lang::Lang::Spanish;
+    const String sfx = english ? "_en" : "_es";
+    constexpr double beat = 60.0 / 122.0;   // 122 BPM
+    const auto orange = Colour (0xffff6a2b), green = Colour (0xff7be3a5), blue = Colour (0xff7fb2ff);
+
+    // 1. EL DADO: 10 tiradas, una cada 2 tiempos
+    {
+        Video v (outDir.getChildFile ("hook1_dado" + sfx));
+        const String hook = english ? "I ROLLED THE DICE 10 TIMES" : U ("TIR\xc3\x89 EL DADO 10 VECES");
+        AudioBuffer<float> rolls (2, 0);
+        for (int k = 0; k < 10; ++k)
+        {
+            proc.loadPreset (findPresetIdx ("Init Ring"));
+            const auto what = proc.randomizeSound (URingAudioProcessor::RandAll, false);
+            const auto shot = snapshot (proc, 0);
+            v.add (hookFrame (shot, { 6, 4, 774, 396 }, hook, "#" + String (k + 1), what, blue), 2.0 * beat);
+            append (rolls, renderSound (proc, 2.0 * beat, false, 48 + (k % 4) * 3), 14.0f);
+        }
+        v.add (ctaCard (english), 4.0 * beat);
+        append (rolls, silence (4.0 * beat), 0.0f);
+        v.audio = rolls;
+        mixInto (v.audio, beatBed (rolls.getNumSamples() / 48000.0), 8.0f);
+        v.finish();
+    }
+    // 2. CARRIL MOD: una batería con un solo secuenciador
+    {
+        Video v (outDir.getChildFile ("hook2_mod" + sfx));
+        const String hook = english ? "A WHOLE DRUM KIT WITH ONE SEQUENCER" : U ("UNA BATER\xc3\x8d" "A ENTERA CON UN SOLO SECUENCIADOR");
+        proc.loadPreset (findPresetIdx ("Plaits Kit Walk"));
+        proc.setEditSequencer (0);
+        const auto seq = snapshot (proc, 2, (int) cz::Lane::Model);
+        const auto models = snapshot (proc, 4);
+        v.add (hookFrame (seq, { 16, 346, 1208, 450 }, hook, english ? "MOD LANE" : "CARRIL MOD", english ? "a different model on every step" : "otro modelo en cada paso", green), 6.0 * beat);
+        v.add (hookFrame (models, { 16, 70, 680, 520 }, hook, english ? "KICK  HAT  SNARE" : "BOMBO  HAT  CAJA", english ? "24 models to choose from" : "24 modelos para elegir", green), 6.0 * beat);
+        v.add (hookFrame (seq, {}, hook, english ? "FREE" : "GRATIS", U ("Mac  \xc2\xb7  Windows  \xc2\xb7  VST3 / AU / CLAP"), green), 4.0 * beat);
+        v.audio = renderSound (proc, 16.0 * beat, true);
+        v.audio.applyGain (Decibels::decibelsToGain (14.0f));
+        v.add (ctaCard (english), 4.0 * beat);
+        append (v.audio, silence (4.0 * beat), 0.0f);
+        v.finish();
+    }
+    // 3. 165 SONIDOS: un preset por cada 2 tiempos sobre el beat
+    {
+        Video v (outDir.getChildFile ("hook3_presets" + sfx));
+        const String hook = english ? "165 SOUNDS. FREE." : "165 SONIDOS. GRATIS.";
+        const char* list[] { "Felt Upright", "Marimba Rosewood", "Gong Driven", "Chord Resonator", "FM Struck String", "Glass Bounce",
+                             "Noise Tine", "Bowed Metal", "Granular Plate", "Steel Plate" };
+        AudioBuffer<float> notes (2, 0);
+        int k = 0;
+        for (auto* name : list)
+        {
+            proc.loadPreset (findPresetIdx (name));
+            const auto shot = snapshot (proc, 0);
+            v.add (hookFrame (shot, { 6, 4, 774, 396 }, hook, String (++k) + " / 165", String (name).toUpperCase(), orange), 2.0 * beat);
+            append (notes, renderSound (proc, 2.0 * beat, false, 48 + (k % 3) * 5), 14.0f);
+        }
+        v.add (ctaCard (english), 4.0 * beat);
+        append (notes, silence (4.0 * beat), 0.0f);
+        v.audio = notes;
+        mixInto (v.audio, beatBed (notes.getNumSamples() / 48000.0), 8.0f);
+        v.finish();
+    }
+    std::cout << "Hooks: 3 videos in " << outDir.getFullPathName() << std::endl;
+    return 0;
+}
+
 } // namespace promo

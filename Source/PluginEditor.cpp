@@ -62,7 +62,7 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
     addAndMakeVisible (canvas);
     for (auto* c : std::initializer_list<juce::Component*> { &synthPage, &fxPage, &seqPage, &livePage, &macroPage, &texturePage, &lcd, &keyboard,
                                                                &synthTab, &fxTab, &seqTab, &liveTab, &macroTab, &textureTab, &prevPreset, &nextPreset, &presetBox, &saveBtn,
-                                                               &recBtn, &recLenBox, &miniMeter, &logoHotspot, &undoBtn, &redoBtn, &browseBtn, &cablesBtn, &diceBtn })
+                                                               &recBtn, &recLenBox, &miniMeter, &logoHotspot, &undoBtn, &redoBtn, &browseBtn, &cablesBtn })
         canvas.addAndMakeVisible (c);
     addMouseListener (this, true);   // cualquier clic en el plugin = el usuario tocó algo (para deshacer)
     setWantsKeyboardFocus (true);
@@ -273,6 +273,26 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
         addChoice (qp, rn, IDs::seqRndRate, "RATE");
         addKnob   (qp, rn, IDs::seqRndTime, "TIME");
         addKnob   (qp, rn, IDs::seqLongShort, "LONG / SHORT");
+        {   // NUEVO SONIDO: un sonido al azar para todo (clic derecho: qué sortear o variar)
+            struct RollButton : juce::TextButton
+            {
+                std::function<void()> onMenu;
+                void mouseDown (const juce::MouseEvent& e) override { if (e.mods.isPopupMenu()) { if (onMenu) onMenu(); return; } juce::TextButton::mouseDown (e); }
+            };
+            auto b = std::make_unique<RollButton>();
+            b->setName ("ROLL");
+            b->setButtonText (mm::lang::tr ("ROLL"));
+            b->setColour (juce::TextButton::textColourOffId, juce::Colour (0xff7fb2ff));
+            b->setTooltip (mm::lang::tr ("A new random sound for everything. Right-click: what to randomize, or a small variation"));
+            b->onClick = [this] { rollDice (URingAudioProcessor::RandAll, false); };
+            b->onMenu = [this] { showDiceMenu(); };
+            rollButton = b.get();
+            qp.addAndMakeVisible (*b);
+            rn.items.push_back (b.get());
+            controls.push_back (std::move (b));
+        }
+        // DADO: prendido, cada nota (del secuenciador o tocada) sale con otro sonido
+        addPad    (qp, rn, IDs::diceNote, "DICE", "EVERY NOTE");
         // MARBLES (Mutable Instruments): las notas salen de un bucle aleatorio con memoria
         Section mb { "MARBLES" };
         mb.tag = juce::Colour (0xff8fe3c8);
@@ -526,14 +546,13 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
     textureTab.setBounds (408, 17, 66, 28);
     browseBtn.setBounds (480, 16, 30, 30);
     prevPreset.setBounds (514, 16, 24, 30);
-    presetBox.setBounds (540, 16, 124, 30);
-    nextPreset.setBounds (666, 16, 24, 30);
-    diceBtn.setBounds (694, 16, 30, 30);   // RANDOM: sonido al azar
-    undoBtn.setBounds (728, 16, 28, 30);
-    redoBtn.setBounds (758, 16, 28, 30);
-    saveBtn.setBounds (790, 16, 56, 30);
-    recBtn.setBounds (850, 16, 56, 30);
-    recLenBox.setBounds (910, 16, 64, 30);
+    presetBox.setBounds (540, 16, 150, 30);
+    nextPreset.setBounds (692, 16, 24, 30);
+    undoBtn.setBounds (720, 16, 28, 30);
+    redoBtn.setBounds (750, 16, 28, 30);
+    saveBtn.setBounds (784, 16, 56, 30);
+    recBtn.setBounds (846, 16, 58, 30);
+    recLenBox.setBounds (908, 16, 66, 30);
     miniMeter.setBounds (980, 12, 22, 40);
     cablesBtn.setBounds (1008, 16, 30, 30);
     lcd.setBounds (1044, 12, baseW - 22 - 1044, 40);
@@ -693,7 +712,7 @@ void URingAudioProcessorEditor::retranslateUi()
         if (auto* k = dynamic_cast<mm::gui::Knob*> (c.get()))           k->retranslate();
         else if (auto* ch = dynamic_cast<mm::gui::ChoiceBox*> (c.get())) ch->retranslate();
         else if (auto* pd = dynamic_cast<mm::gui::Pad*> (c.get()))       pd->retranslate();
-        else if (auto* tb = dynamic_cast<juce::TextButton*> (c.get()); tb != nullptr && tb->getName().startsWith ("STORE"))
+        else if (auto* tb = dynamic_cast<juce::TextButton*> (c.get()); tb != nullptr && (tb->getName().startsWith ("STORE") || tb->getName() == "ROLL"))
             tb->setButtonText (tr (tb->getName()));
     }
     seqGrid.retranslate();
@@ -1406,7 +1425,7 @@ void URingAudioProcessorEditor::showDiceMenu()
     m.addItem (12, tr ("Vary engines A / B"));
     m.addItem (13, tr ("Vary engine C"));
     m.addItem (14, tr ("Vary effects"));
-    m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (&diceBtn), [this] (int r)
+    m.showMenuAsync (juce::PopupMenu::Options().withTargetComponent (rollButton != nullptr ? (juce::Component*) rollButton : (juce::Component*) &diceBtn), [this] (int r)
     {
         using RS = URingAudioProcessor::RandomScope;
         switch (r)

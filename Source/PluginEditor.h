@@ -134,6 +134,7 @@ private:
                         browseBtn { mm::gui::IconButton::Icon::Browse }, cablesBtn { mm::gui::IconButton::Icon::Cables },
                         diceBtn { mm::gui::IconButton::Icon::Dice };
     void rollDice (URingAudioProcessor::RandomScope scope, bool vary);
+    juce::TextButton* rollButton = nullptr;   // NUEVO SONIDO (módulo AZAR de la pestaña SEQ)
     void showDiceMenu();
     void setCableView (int view, bool announce);
     int previewNote = -1, previewId = 0;

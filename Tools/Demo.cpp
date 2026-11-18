@@ -1771,6 +1771,12 @@ int main (int argc, char** argv)
         for (int i = 3; i < argc; ++i) if (juce::String (argv[i]) == "--en") en = true;
         return promo::run (proc, outDir, en);
     }
+    if (argc > 2 && juce::String (argv[2]) == "hooks") // videos con gancho para redes (--en = en inglés)
+    {
+        bool en = false;
+        for (int i = 3; i < argc; ++i) if (juce::String (argv[i]) == "--en") en = true;
+        return promo::runHooks (proc, outDir, en);
+    }
     if (argc > 2 && (juce::String (argv[2]) == "video15en" || juce::String (argv[2]) == "video15es")) // videos cortos de CCRing 1.5
         return tutorial::run (proc, outDir, true, juce::String (argv[2]) == "video15en", false, true);
     if (argc > 2 && juce::String (argv[2]).startsWith ("tutorial")) // diapositivas del video tutorial ("tutorial3" = versión corta)
