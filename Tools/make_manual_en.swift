@@ -1,5 +1,5 @@
-// URing manual in English (A4) — same layout as make_manual.swift.
-// Manual de URing en PDF (A4): capturas reales del plugin + texto. Solo usa frameworks de macOS.
+// CCRing manual in English (A4) — same layout as make_manual.swift.
+// Manual de CCRing en PDF (A4): capturas reales del plugin + texto. Solo usa frameworks de macOS.
 // Uso: make_manual <carpeta de capturas look_*.png> <Montserrat-Bold.ttf> <salida.pdf>
 import AppKit
 import CoreText
@@ -110,7 +110,7 @@ func beginPage(_ title: String, _ kicker: String, colour: NSColor = orange) {
     line(kicker.uppercased(), font: mont(7.5), color: dim, at: CGPoint(x: M + 14, y: H - 70), kern: 1.4)
     // pie
     ctx.setFillColor(NSColor(calibratedWhite: 1, alpha: 0.08).cgColor); ctx.fill(CGRect(x: M, y: 34, width: W - 2 * M, height: 0.6))
-    line("URING 1.5  ·  MONSTRI AUDIO", font: mont(6.5), color: dim, at: CGPoint(x: M, y: 22), kern: 1.4)
+    line("CCRING 1.5  ·  CCR", font: mont(6.5), color: dim, at: CGPoint(x: M, y: 22), kern: 1.4)
     line("\(pageNo)", font: mont(7), color: dim, at: CGPoint(x: W - M - 8, y: 22))
 }
 func endPage() { ctx.endPDFPage() }
@@ -128,17 +128,17 @@ ctx.beginPDFPage(nil)
 ctx.setFillColor(bg.cgColor); ctx.fill(mediaBox)
 ctx.setFillColor(orange.withAlphaComponent(0.35).cgColor); ctx.fillEllipse(in: CGRect(x: M, y: H - 128, width: 34, height: 34))
 ctx.setFillColor(orange.cgColor); ctx.fillEllipse(in: CGRect(x: M + 8, y: H - 120, width: 18, height: 18))
-line("URING", font: mont(54), color: .white, at: CGPoint(x: M + 48, y: H - 130), kern: 12)
+line("CCRING", font: mont(54), color: .white, at: CGPoint(x: M + 48, y: H - 130), kern: 12)
 line("MANUAL  ·  VERSION 1.5", font: mont(11), color: orange, at: CGPoint(x: M + 2, y: H - 162), kern: 3)
 line("Physical-modelling instrument + 24 synthesis models, with a sequencer built for minimal house", font: body(11.5), color: dim, at: CGPoint(x: M + 2, y: H - 182))
 drawShot("look_macro.png", top: 215)
 drawText(styled("""
-## What is URing
-URing is an instrument that **uses no samples**: every note strikes, plucks, bows or blows simulated objects — strings, wood, metal, drum skins — and sounds the way that object would. It has **three engines**: A (resonator), B (impact) and C (ENGINE C, 24 synthesis models), two Euclidean sequencers, studio effects, a granular TEXTURE page and a page for playing live.
+## What is CCRing
+CCRing is an instrument that **uses no samples**: every note strikes, plucks, bows or blows simulated objects — strings, wood, metal, drum skins — and sounds the way that object would. It has **three engines**: A (resonator), B (impact) and C (ENGINE C, 24 synthesis models), two Euclidean sequencers, studio effects, a granular TEXTURE page and a page for playing live.
 ## How to read this manual
-One page per tab: **SYNTH, FX, SEQ, LIVE, ENGINE C and TEXTURE**, plus presets, motion recording and tips for minimal / rominimal. Words in CAPITALS are the names you see in the plugin. URing can also be shown in Spanish: click the URing logo and choose **ESPAÑOL** under LANGUAGE.
+One page per tab: **SYNTH, FX, SEQ, LIVE, ENGINE C and TEXTURE**, plus presets, motion recording and tips for minimal / rominimal. Words in CAPITALS are the names you see in the plugin. CCRing can also be shown in Spanish: click the CCRing logo and choose **ESPAÑOL** under LANGUAGE.
 """, size: 10.5), in: CGRect(x: M, y: 60, width: W - 2 * M, height: 230))
-line("MONSTRI AUDIO", font: mont(8), color: dim, at: CGPoint(x: M, y: 30), kern: 2)
+line("CCR", font: mont(8), color: dim, at: CGPoint(x: M, y: 30), kern: 2)
 ctx.endPDFPage()
 
 // ==================================================================== GETTING STARTED
@@ -148,7 +148,7 @@ columns("""
 ## Install
 - **Mac:** double-click the .pkg (if macOS warns about an "unidentified developer": right-click > Open, or System Settings > Privacy & Security > Open Anyway).
 - **Windows:** see README.txt inside the zip.
-- In **Ableton Live**: Settings > Plug-Ins > Rescan. URing shows up under **Monstri Audio** (VST3 and Audio Units).
+- In **Ableton Live**: Settings > Plug-Ins > Rescan. CCRing shows up under **CCR** (VST3 and Audio Units).
 - Load it on a **MIDI track**. It always starts at **−20 dB**.
 ## Top bar (left to right)
 - **Logo:** credits, shortcuts, donations and **language** (English / Español).
@@ -312,7 +312,7 @@ columns("""
 - While it records, move knobs or the X/Y pad. Recorded knobs turn **light blue**.
 - Right-click REC: list of what was recorded and clear. It is saved with your Ableton project.
 ## Presets
-- Factory presets never change. **SAVE** creates a user preset (in Music > URing > Presets) shown in the **USER** category of the browser.
+- Factory presets never change. **SAVE** creates a user preset (in Music > CCRing > Presets) shown in the **USER** category of the browser.
 - Exporting or freezing in Ableton always gives **exactly the same audio**.
 ## In Ableton
 - One instance per sound; with **MIDI OUT** you can record the sequencer notes on another track.
@@ -327,8 +327,8 @@ columns("""
 - **Kick Into Modal** and **Modal Into Strings** show C > A FEED: a synthetic hit making a real object ring.
 - Leave the volume at −20 dB and raise it on the Ableton mixer, so delay and reverb never clip.
 ## Free and open source
-- URing is **free software** (GNU AGPL-3.0 licence): use it in your music, share it, study and improve the code.
-- If it helps you, a **donation** keeps it growing: **paypal.me/JavierCazou** or Mercado Pago (Argentina) to the alias **nodrama.perro**, or click the URing logo (top left) and use **DONATE**.
+- CCRing is **free software** (GNU AGPL-3.0 licence): use it in your music, share it, study and improve the code.
+- If it helps you, a **donation** keeps it growing: **paypal.me/JavierCazou** or Mercado Pago (Argentina) to the alias **nodrama.perro**, or click the CCRing logo (top left) and use **DONATE**.
 ## Credits
 Engine C, TEXTURE and MARBLES use the open-source code of **Plaits**, **Clouds** and **Marbles** by Mutable Instruments (Émilie Gillet), MIT licence. Typeface **Montserrat** (SIL OFL).
 """, top: 88 + hr + 16)

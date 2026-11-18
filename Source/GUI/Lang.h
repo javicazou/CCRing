@@ -21,7 +21,15 @@ inline juce::File settingsFile()
    #if JUCE_MAC
     base = base.getChildFile ("Application Support");   // en Mac la carpeta base es ~/Library
    #endif
-    return base.getChildFile ("Monstri Audio").getChildFile ("URing").getChildFile ("Settings.xml");
+    // CCR/CCRing/Settings.xml (la primera vez copia los ajustes de URing: Monstri Audio/URing)
+    const auto f = base.getChildFile ("CCR").getChildFile ("CCRing").getChildFile ("Settings.xml");
+    const auto old = base.getChildFile ("Monstri Audio").getChildFile ("URing").getChildFile ("Settings.xml");
+    if (! f.existsAsFile() && old.existsAsFile())
+    {
+        f.getParentDirectory().createDirectory();
+        old.copyFileTo (f);
+    }
+    return f;
 }
 
 // Cambia cada vez que se elige otro idioma: las ventanas abiertas lo miran en su timer y se retraducen
@@ -88,7 +96,7 @@ inline const std::unordered_map<juce::String, juce::String>& table()
              "Motor C: 24 modelos de síntesis. Subí MOTOR C (SINTE > MEZCLA) o elegí un modelo para escucharlo");
         add ("Undo (Cmd+Z)", "Deshacer (Cmd+Z)"); add ("Redo (Cmd+Shift+Z)", "Rehacer (Cmd+Shift+Z)");
         add ("Preset browser: search, categories, favorites", "Buscador de presets: búsqueda, categorías, favoritos");
-        add ("About URing", "Acerca de URing");
+        add ("About CCRing", "Acerca de CCRing");
         add ("REC: while the song plays, every knob you move is recorded in a loop (LEN). Right-click: recorded knobs / clear",
              "REC: mientras suena la canción, cada perilla que movés se graba en un bucle (LEN). Clic derecho: perillas grabadas / borrar");
         add ("Automation loop: SEQ = one full cycle of SEQ 1 (8, 16, 32, 64 steps...), or 1-8 bars. REC records exactly one loop",
@@ -196,9 +204,9 @@ inline const std::unordered_map<juce::String, juce::String>& table()
              "Right-click a knob: MIDI learn     Double-click: default value",
              "A W S E D F T G Y H U J K = notas     Z / X = octava     C / V = velocidad\n"
              "Clic derecho en una perilla: aprender MIDI     Doble clic: valor por defecto");
-        add ("URing is free software (GNU AGPL-3.0). If it makes your music better,\n"
+        add ("CCRing is free software (GNU AGPL-3.0). If it makes your music better,\n"
              "a small donation helps keep it alive and growing.",
-             "URing es software libre (GNU AGPL-3.0). Si te ayuda en tu música,\n"
+             "CCRing es software libre (GNU AGPL-3.0). Si te ayuda en tu música,\n"
              "una pequeña donación ayuda a que siga vivo y creciendo.");
         // ---- opciones de los selectores (valores de parámetros)
         add ("Modal", "Modal"); add ("String", "Cuerda"); add ("Sympathetic", "Simpático"); add ("Metallic", "Metálico"); add ("Piano", "Piano");

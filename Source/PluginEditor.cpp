@@ -52,12 +52,12 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
         g.fillEllipse (22.0f, 25.0f, 8.0f, 8.0f);
         g.setColour (Palette::text);
         g.setFont (uiFont (20.0f).withExtraKerningFactor (0.25f));
-        g.drawText ("URING", 40, 9, 130, 26, juce::Justification::centredLeft);
+        g.drawText ("CCRING", 40, 9, 130, 26, juce::Justification::centredLeft);
         g.setColour (Palette::dim.withAlpha (0.8f));
         g.setFont (uiFont (7.5f).withExtraKerningFactor (0.3f));
-        g.drawText ("MONSTRI AUDIO", 41, 34, 130, 12, juce::Justification::centredLeft);
+        g.drawText ("CCR", 41, 34, 130, 12, juce::Justification::centredLeft);
         g.setColour (Palette::accent.withAlpha (0.8f));
-        g.drawText (juce::String ("v") + URING_VERSION, 120, 34, 40, 12, juce::Justification::centredLeft);
+        g.drawText (juce::String ("v") + URING_VERSION, 64, 34, 40, 12, juce::Justification::centredLeft);
     };
     addAndMakeVisible (canvas);
     for (auto* c : std::initializer_list<juce::Component*> { &synthPage, &fxPage, &seqPage, &livePage, &macroPage, &texturePage, &lcd, &keyboard,
@@ -86,7 +86,7 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
         if (proc.loadUserPreset (name)) lcd.setText ("USER PRESET", name);
     };
     logoHotspot.setMouseCursor (juce::MouseCursor::PointingHandCursor);
-    logoHotspot.setHelpText ("About URing");
+    logoHotspot.setHelpText ("About CCRing");
     logoHotspot.onClick = [this] { about.setVisible (true); about.toFront (false); };
     miniMeter.setInterceptsMouseClicks (false, false);
     fxPage.addAndMakeVisible (fxAnalyzer);
@@ -674,7 +674,7 @@ void URingAudioProcessorEditor::retranslateUi()
     redoBtn.setTooltip (tr ("Redo (Cmd+Shift+Z)"));
     browseBtn.setTooltip (tr ("Preset browser: search, categories, favorites"));
     cablesBtn.setTooltip (tr ("Cables: shown / faded / hidden (they keep working)"));
-    logoHotspot.setHelpText (tr ("About URing"));
+    logoHotspot.setHelpText (tr ("About CCRing"));
     recBtn.setTooltip (tr ("REC: while the song plays, every knob you move is recorded in a loop (LEN). Right-click: recorded knobs / clear"));
     recLenBox.setTooltip (tr ("Automation loop: SEQ = one full cycle of SEQ 1 (8, 16, 32, 64 steps...), or 1-8 bars. REC records exactly one loop"));
     saveBtn.setTooltip (tr ("Save the current sound as a user preset. Factory presets never change; tweaks (*) are lost unless you save"));
@@ -1057,7 +1057,7 @@ void URingAudioProcessorEditor::Page::paint (juce::Graphics& g)
             {
                 g.setColour (s.light ? juce::Colour (0xff3a3b3f) : Palette::dim.withAlpha (0.7f));
                 g.setFont (uiFont (8.5f, true).withExtraKerningFactor (0.3f));
-                g.drawText ("URING", s.bounds.toFloat().removeFromBottom (18.0f).translated (0.0f, -2.0f),
+                g.drawText ("CCRING", s.bounds.toFloat().removeFromBottom (18.0f).translated (0.0f, -2.0f),
                             juce::Justification::centred);
             }
         }

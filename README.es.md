@@ -1,9 +1,9 @@
-# URing
+# CCRing
 
-**Sintetizador de modelado físico, gratis y de código libre** — por Monstri Audio.
+**Sintetizador de modelado físico, gratis y de código libre** — por CCR.
 *[Read in English](README.md)*
 
-![URing](docs/img/synth.png)
+![CCRing](docs/img/synth.png)
 
 Tres motores que se pueden mezclar y conectar entre sí:
 
@@ -31,25 +31,25 @@ Novedades de la **1.5**: carril **MOD** en el secuenciador (otro modelo del moto
 
 Bajá la última versión en **Releases** (a la derecha de esta página).
 
-- **Mac (Intel y Apple Silicon, macOS 11 o superior):** abrí `URing-<versión>-Mac.pkg`.
-  URing no está firmado por Apple (es un proyecto gratuito), así que la primera vez macOS lo
+- **Mac (Intel y Apple Silicon, macOS 11 o superior):** abrí `CCRing-<versión>-Mac.pkg`.
+  CCRing no está firmado por Apple (es un proyecto gratuito), así que la primera vez macOS lo
   bloquea: andá a *Ajustes del Sistema → Privacidad y seguridad → "Abrir igualmente"*, o hacé
   clic derecho sobre el .pkg → *Abrir*. Si el plugin no aparece en tu DAW, ejecutá
-  `Permitir URing.command` (incluido en el zip).
-- **Windows 10/11 (64 bits):** descomprimí `URing-<versión>-Windows.zip` y ejecutá
+  `Permitir CCRing.command` (incluido en el zip).
+- **Windows 10/11 (64 bits):** descomprimí `CCRing-<versión>-Windows.zip` y ejecutá
   `INSTALAR_PLUGIN.bat` como administrador.
 
-Después, en tu DAW: re-escaneá los plug-ins. Manuales: [`docs/URing_Manual_ES.pdf`](docs/URing_Manual_ES.pdf) (español)
-y [`docs/URing_Manual_EN.pdf`](docs/URing_Manual_EN.pdf) (inglés).
+Después, en tu DAW: re-escaneá los plug-ins. Manuales: [`docs/CCRing_Manual_ES.pdf`](docs/CCRing_Manual_ES.pdf) (español)
+y [`docs/CCRing_Manual_EN.pdf`](docs/CCRing_Manual_EN.pdf) (inglés).
 
 ## Apoyar el proyecto ♥
 
-URing es y va a seguir siendo gratis. Si lo usás en tu música y querés ayudar a que siga creciendo:
+CCRing es y va a seguir siendo gratis. Si lo usás en tu música y querés ayudar a que siga creciendo:
 
 - **PayPal:** [paypal.me/JavierCazou](https://paypal.me/JavierCazou)
 - **Mercado Pago (Argentina):** alias **`nodrama.perro`**
 
-También ayuda mucho compartir lo que hagas con URing, reportar errores en **Issues** y
+También ayuda mucho compartir lo que hagas con CCRing, reportar errores en **Issues** y
 proponer mejoras.
 
 ## Compilar desde el código
@@ -67,11 +67,11 @@ En GitHub, cada push a `main` compila automáticamente Mac y Windows
 
 ## Licencia
 
-URing es software libre bajo la **GNU Affero General Public License v3.0** (ver `LICENSE`).
+CCRing es software libre bajo la **GNU Affero General Public License v3.0** (ver `LICENSE`).
 Podés usarlo para hacer música (incluso comercial), compartirlo y modificarlo; si distribuís
 una versión modificada, tiene que seguir siendo libre bajo la misma licencia.
 
-Los sonidos que hagas con URing son tuyos: la licencia cubre el programa, no tu música.
+Los sonidos que hagas con CCRing son tuyos: la licencia cubre el programa, no tu música.
 
 ## Créditos
 
@@ -79,5 +79,5 @@ Ver [`CREDITOS.md`](CREDITOS.md). En resumen: el motor C, la página TEXTURE y e
 usan el código de **Plaits**, **Clouds** y **Marbles** de Mutable Instruments (Émilie Gillet, licencia MIT),
 la interfaz usa **JUCE** (AGPLv3) y la tipografía **Montserrat** (SIL OFL).
 
-URing es un proyecto independiente; no está afiliado ni respaldado por Mutable Instruments
+CCRing es un proyecto independiente; no está afiliado ni respaldado por Mutable Instruments
 ni por ninguna otra marca mencionada.

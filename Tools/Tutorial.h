@@ -21,6 +21,7 @@ struct Slide
     std::function<void (URingAudioProcessor&)> setup;
     float music = 0.08f;     // volumen de fondo de URing durante la diapositiva
     float extraSeconds = 0.8f;
+    int seqLane = -1;        // carril de la grilla a mostrar (SEQ)
 };
 
 // Graba un barrido de BRIGHTNESS y CUTOFF con REC (para mostrar las perillas en celeste)
@@ -432,6 +433,42 @@ inline void drawEngineDiagram (juce::Graphics& g, juce::Rectangle<float> area)
     g.drawText (english() ? String ("LFOs, MACROS, LOCKS AND REC can move any knob along this path") : U ("LFO, MACROS, LOCKS Y REC mueven cualquier perilla de este camino"), Rectangle<float> (x0, y2 + 200, 1760, 40), Justification::centred);
 }
 
+
+// ---- Videos cortos de CCRing 1.5 (menos de 1 minuto): inglés y español
+inline std::vector<Slide> slidesShort (bool en)
+{
+    using R = juce::Rectangle<int>;
+    auto seqOn = [] (URingAudioProcessor& p) { p.setEditSequencer (0); auto* prm = p.apvts.getParameter (IDs::seqOn); prm->setValueNotifyingHost (1.0f); };
+    std::vector<Slide> v;
+    v.push_back ({ "CCRING", en ? "Free physical-modelling synth by CCR" : "Sinte de modelado f\xc3\xadsico gratis de CCR",
+                   en ? "This is CCRing, a free physical modelling synth by CCR. Here it is in one minute."
+                      : "Este es CCRing, un sinte de modelado f\xc3\xadsico gratis de CCR. Te lo muestro en un minuto.",
+                   -1, "Felt Upright", {}, {}, 0.35f, 0.6f });
+    v.push_back ({ en ? "165 PRESETS" : "165 PRESETS", en ? "Browser, favourites and PREVIEW" : "Buscador, favoritos y ESCUCHAR",
+                   en ? "Pick a sound from a hundred and sixty five presets. Turn on preview to hear each one as you browse."
+                      : "Eleg\xc3\xad entre ciento sesenta y cinco presets. Con escuchar, cada uno suena mientras recorr\xc3\xa9s la lista.",
+                   0, "Marimba Rosewood", { R (476, 14, 244, 34) }, {} });
+    v.push_back ({ en ? "THREE ENGINES" : "TRES MOTORES", en ? "A resonates  -  B strikes  -  C: 24 synth models" : "A resuena  -  B golpea  -  C: 24 modelos de s\xc3\xadntesis",
+                   en ? "Engine A resonates, engine B strikes, and engine C adds twenty four synth models that can drive the other two."
+                      : "El motor A resuena, el B golpea, y el C suma veinticuatro modelos que pueden hacer vibrar a los otros dos.",
+                   0, "FM Struck String", { R (16, 70, 1208, 330) }, {} });
+    v.push_back ({ en ? "MOD LANE" : "CARRIL MOD", en ? "A different engine C model on every step" : "Otro modelo del motor C en cada paso",
+                   en ? "The new mod lane changes the model on every step. A whole drum kit from one sequencer."
+                      : "El carril mod nuevo cambia el modelo en cada paso. Una bater\xc3\xad" "a entera desde un solo secuenciador.",
+                   2, "Plaits Kit Walk", { R (16, 346, 1208, 450) }, seqOn, 0.12f, 0.8f, (int) cz::Lane::Model });
+    v.push_back ({ en ? "LISTEN" : "ESCUCH\xc3\x81", en ? "Some CCRing sounds" : "Algunos sonidos de CCRing", en ? "Listen." : "Escuch\xc3\xa1.",
+                   -1, "Model Hopper", {}, {}, 1.0f, 5.0f });
+    v.push_back ({ en ? "PLAY LIVE" : "EN VIVO", en ? "Macros, morph, X/Y pad  -  cables shown, faded or hidden" : "Macros, morph, pad X/Y  -  cables a la vista, transparentes u ocultos",
+                   en ? "Play live with macros, morph and the X Y pad. Record knob moves with rec."
+                      : "Toc\xc3\xa1 en vivo con macros, morph y el pad equis y. Grab\xc3\xa1 movimientos con rec.",
+                   3, "Fifths Machine", { R (16, 382, 700, 412) }, {} });
+    v.push_back ({ en ? "FREE  -  MAC & WINDOWS" : "GRATIS  -  MAC Y WINDOWS", "github.com/javicazou/CCRing",
+                   en ? "CCRing is free and open source, for Mac and Windows. If you like it, support it with a donation. Enjoy!"
+                      : "CCRing es gratis y de c\xc3\xb3" "digo libre, para Mac y Windows. Si te gusta, apoyalo con una donaci\xc3\xb3n. \xc2\xa1" "Disfrutalo!",
+                   -1, "Glass Machine", {}, {}, 0.4f, 1.2f });
+    return v;
+}
+
 inline void drawSlide (juce::Image& canvas, const juce::Image& shot, const Slide& s, int index, int total)
 {
     using namespace juce;
@@ -474,16 +511,26 @@ inline void drawSlide (juce::Image& canvas, const juce::Image& shot, const Slide
     g.drawFittedText (U (s.caption), bar.reduced (24.0f, 8.0f).toNearestInt(), Justification::centred, 2, 0.8f);
 }
 
-inline int run (URingAudioProcessor& proc, const juce::File& outDir, bool shortVersion = false, bool inEnglish = false, bool spanish14 = false)
+inline int runSlides (URingAudioProcessor& proc, juce::File dir, const std::vector<Slide>& list);
+
+inline int run (URingAudioProcessor& proc, const juce::File& outDir, bool shortVersion = false, bool inEnglish = false, bool spanish14 = false,
+                bool short15 = false)
 {
     using namespace juce;
     english() = inEnglish;
     if (inEnglish) mm::lang::currentRef() = mm::lang::Lang::English;
-    if (spanish14) mm::lang::currentRef() = mm::lang::Lang::Spanish;
+    else mm::lang::currentRef() = mm::lang::Lang::Spanish;
+    if (short15)
+        return runSlides (proc, outDir.getChildFile (inEnglish ? "video15en" : "video15es"), slidesShort (inEnglish));
     auto dir = outDir.getChildFile (inEnglish ? "tutorial3en" : spanish14 ? "tutorial3es" : (shortVersion ? "tutorial3" : "tutorial"));
+    return runSlides (proc, dir, inEnglish ? slides3en() : spanish14 ? slides3es14() : (shortVersion ? slides3() : slides()));
+}
+
+inline int runSlides (URingAudioProcessor& proc, juce::File dir, const std::vector<Slide>& list)
+{
+    using namespace juce;
     dir.deleteRecursively();
     dir.createDirectory();
-    const auto list = inEnglish ? slides3en() : spanish14 ? slides3es14() : (shortVersion ? slides3() : slides());
     int presetIdx = 0;
     String index;
     for (int i = 0; i < (int) list.size(); ++i)
@@ -495,7 +542,11 @@ inline int run (URingAudioProcessor& proc, const juce::File& outDir, bool shortV
         if (s.setup) s.setup (proc);
         std::unique_ptr<AudioProcessorEditor> editor (proc.createEditor());
         editor->setSize (URingAudioProcessorEditor::baseW, URingAudioProcessorEditor::baseH);
-        if (auto* ed = dynamic_cast<URingAudioProcessorEditor*> (editor.get())) ed->showTab (jmax (0, s.tab));
+        if (auto* ed = dynamic_cast<URingAudioProcessorEditor*> (editor.get()))
+        {
+            ed->showTab (jmax (0, s.tab));
+            if (s.seqLane >= 0) ed->testShowSeqLane (s.seqLane);
+        }
         {   // que suene un momento: osciloscopio, espectro, vúmetros y LCD muestran audio real
             static PlayHead ph; ph.ppq = 0.0; ph.bpm = 122.0;
             proc.setPlayHead (&ph);

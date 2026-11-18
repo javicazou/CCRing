@@ -1579,6 +1579,8 @@ int main (int argc, char** argv)
         std::cout << "WAV: " << f.getFullPathName() << std::endl;
         return 0;
     }
+    if (argc > 2 && (juce::String (argv[2]) == "video15en" || juce::String (argv[2]) == "video15es")) // videos cortos de CCRing 1.5
+        return tutorial::run (proc, outDir, true, juce::String (argv[2]) == "video15en", false, true);
     if (argc > 2 && juce::String (argv[2]).startsWith ("tutorial")) // diapositivas del video tutorial ("tutorial3" = versión corta)
         return tutorial::run (proc, outDir, juce::String (argv[2]).startsWith ("tutorial3"), juce::String (argv[2]) == "tutorial3en",
                               juce::String (argv[2]) == "tutorial3es");

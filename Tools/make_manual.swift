@@ -1,4 +1,4 @@
-// Manual de URing en PDF (A4): capturas reales del plugin + texto. Solo usa frameworks de macOS.
+// Manual de CCRing en PDF (A4): capturas reales del plugin + texto. Solo usa frameworks de macOS.
 // Uso: make_manual <carpeta de capturas look_*.png> <Montserrat-Bold.ttf> <salida.pdf>
 import AppKit
 import CoreText
@@ -109,7 +109,7 @@ func beginPage(_ title: String, _ kicker: String, colour: NSColor = orange) {
     line(kicker.uppercased(), font: mont(7.5), color: dim, at: CGPoint(x: M + 14, y: H - 70), kern: 1.4)
     // pie
     ctx.setFillColor(NSColor(calibratedWhite: 1, alpha: 0.08).cgColor); ctx.fill(CGRect(x: M, y: 34, width: W - 2 * M, height: 0.6))
-    line("URING 1.5  ·  MONSTRI AUDIO", font: mont(6.5), color: dim, at: CGPoint(x: M, y: 22), kern: 1.4)
+    line("CCRING 1.5  ·  CCR", font: mont(6.5), color: dim, at: CGPoint(x: M, y: 22), kern: 1.4)
     line("\(pageNo)", font: mont(7), color: dim, at: CGPoint(x: W - M - 8, y: 22))
 }
 func endPage() { ctx.endPDFPage() }
@@ -127,17 +127,17 @@ ctx.beginPDFPage(nil)
 ctx.setFillColor(bg.cgColor); ctx.fill(mediaBox)
 ctx.setFillColor(orange.withAlphaComponent(0.35).cgColor); ctx.fillEllipse(in: CGRect(x: M, y: H - 128, width: 34, height: 34))
 ctx.setFillColor(orange.cgColor); ctx.fillEllipse(in: CGRect(x: M + 8, y: H - 120, width: 18, height: 18))
-line("URING", font: mont(54), color: .white, at: CGPoint(x: M + 48, y: H - 130), kern: 12)
+line("CCRING", font: mont(54), color: .white, at: CGPoint(x: M + 48, y: H - 130), kern: 12)
 line("MANUAL  ·  VERSIÓN 1.5", font: mont(11), color: orange, at: CGPoint(x: M + 2, y: H - 162), kern: 3)
 line("Instrumento de modelado físico + 24 modelos de síntesis, con secuenciador para minimal house", font: body(11.5), color: dim, at: CGPoint(x: M + 2, y: H - 182))
 drawShot("look_macro.png", top: 215)
 drawText(styled("""
-## Qué es URing
-URing es un instrumento que **no usa samples**: cada nota golpea, pulsa, frota o sopla objetos simulados — cuerdas, maderas, metales, parches — y suena como sonaría ese objeto. Tiene **tres motores**: A (resonador), B (impacto) y C (MOTOR C, 24 modelos de síntesis), dos secuenciadores euclidianos, efectos de estudio y una página para tocar en vivo.
+## Qué es CCRing
+CCRing es un instrumento que **no usa samples**: cada nota golpea, pulsa, frota o sopla objetos simulados — cuerdas, maderas, metales, parches — y suena como sonaría ese objeto. Tiene **tres motores**: A (resonador), B (impacto) y C (MOTOR C, 24 modelos de síntesis), dos secuenciadores euclidianos, efectos de estudio y una página para tocar en vivo.
 ## Cómo leer este manual
-Una página por pestaña: **SYNTH, FX, SEQ, LIVE, ENGINE C y TEXTURE** (en español: SINTE, FX, SEQ, VIVO, MOTOR C y TEXTURA), más presets, grabación de movimientos y consejos para minimal / rominimal. Las palabras en MAYÚSCULAS son los nombres que ves en el plugin, que viene en inglés: si lo preferís en español, tocá el logo de URing y elegí **ESPAÑOL** en IDIOMA.
+Una página por pestaña: **SYNTH, FX, SEQ, LIVE, ENGINE C y TEXTURE** (en español: SINTE, FX, SEQ, VIVO, MOTOR C y TEXTURA), más presets, grabación de movimientos y consejos para minimal / rominimal. Las palabras en MAYÚSCULAS son los nombres que ves en el plugin, que viene en inglés: si lo preferís en español, tocá el logo de CCRing y elegí **ESPAÑOL** en IDIOMA.
 """, size: 10.5), in: CGRect(x: M, y: 60, width: W - 2 * M, height: 230))
-line("MONSTRI AUDIO", font: mont(8), color: dim, at: CGPoint(x: M, y: 30), kern: 2)
+line("CCR", font: mont(8), color: dim, at: CGPoint(x: M, y: 30), kern: 2)
 ctx.endPDFPage()
 
 // ==================================================================== EMPEZAR
@@ -147,7 +147,7 @@ columns("""
 ## Instalar
 - **Mac:** doble clic en el .pkg (si avisa "desarrollador no identificado": clic derecho > Abrir).
 - **Windows:** ver LEEME_WINDOWS.txt dentro del zip.
-- En **Ableton Live**: Preferencias > Plug-ins > Re-escanear. URing aparece en **Monstri Audio** (VST3 y Audio Units).
+- En **Ableton Live**: Preferencias > Plug-ins > Re-escanear. CCRing aparece en **CCR** (VST3 y Audio Units).
 - Cargalo en una **pista MIDI**. Arranca siempre en **−20 dB**.
 ## Barra superior (de izquierda a derecha)
 - **Logo:** abre los créditos, los atajos, las donaciones y el **idioma** (English / Español).
@@ -311,7 +311,7 @@ columns("""
 - Mientras graba, mové perillas o el pad X/Y. Lo grabado queda en **celeste** sobre cada perilla.
 - Clic derecho en REC: lista de lo grabado y borrar. Se guarda con el proyecto de Ableton.
 ## Presets
-- Los de fábrica nunca cambian. **SAVE** crea uno de usuario (en Música > URing > Presets) y aparece en la categoría **USER** del buscador.
+- Los de fábrica nunca cambian. **SAVE** crea uno de usuario (en Música > CCRing > Presets) y aparece en la categoría **USER** del buscador.
 - Exportar o congelar en Ableton da **siempre el mismo audio**.
 ## En Ableton
 - Una instancia por sonido; con **MIDI OUT** grabás las notas del secuenciador en otra pista.
@@ -326,8 +326,8 @@ columns("""
 - **Kick Into Modal** y **Modal Into Strings** muestran el C > A FEED: un golpe sintético haciendo sonar un objeto real.
 - Dejá el volumen en −20 dB y subí en el mixer de Ableton: así el delay y la reverb no saturan.
 ## Libre y gratis
-- URing es **software libre** (licencia GNU AGPL-3.0): podés usarlo en tu música, compartirlo y estudiar o mejorar el código.
-- Si te sirve, una **donación** ayuda a seguir mejorándolo: **paypal.me/JavierCazou** o Mercado Pago al alias **nodrama.perro**, o tocá el logo de URing (arriba a la izquierda) y usá **DONATE**.
+- CCRing es **software libre** (licencia GNU AGPL-3.0): podés usarlo en tu música, compartirlo y estudiar o mejorar el código.
+- Si te sirve, una **donación** ayuda a seguir mejorándolo: **paypal.me/JavierCazou** o Mercado Pago al alias **nodrama.perro**, o tocá el logo de CCRing (arriba a la izquierda) y usá **DONATE**.
 ## Créditos
 El motor C, TEXTURE y MARBLES usan el código abierto de **Plaits**, **Clouds** y **Marbles** de Mutable Instruments (Émilie Gillet), licencia MIT. Tipografía **Montserrat** (SIL OFL). Voz del tutorial: Piper es_AR Daniela (OpenSLR 61, CC BY-SA 4.0).
 """, top: 88 + hr + 16)

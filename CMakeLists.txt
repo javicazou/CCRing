@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Arquitecturas macOS")
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "macOS mínimo")
 
-project(URing VERSION 1.5.0 LANGUAGES C CXX)
+project(CCRing VERSION 1.5.0 LANGUAGES C CXX)
 add_compile_definitions(URING_VERSION="${PROJECT_VERSION}")
 
 set(CMAKE_CXX_STANDARD 17)
@@ -22,12 +22,12 @@ FetchContent_Declare(JUCE
 FetchContent_MakeAvailable(JUCE)
 
 # ---------------------------------------------------------------- Plugin
-juce_add_plugin(URing
-    COMPANY_NAME                "Monstri Audio"
-    BUNDLE_ID                   com.monstriaudio.uring
+juce_add_plugin(CCRing
+    COMPANY_NAME                "CCR"
+    BUNDLE_ID                   com.ccr.ccring
     PLUGIN_MANUFACTURER_CODE    Jvto
     PLUGIN_CODE                 Urng
-    PRODUCT_NAME                "URing"
+    PRODUCT_NAME                "CCRing"
     FORMATS                     VST3 AU Standalone
     IS_SYNTH                    TRUE
     NEEDS_MIDI_INPUT            TRUE
@@ -39,11 +39,11 @@ juce_add_plugin(URing
     AU_MAIN_TYPE                kAudioUnitType_MusicDevice
     MICROPHONE_PERMISSION_ENABLED FALSE)
 
-target_sources(URing PRIVATE
+target_sources(CCRing PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp)
-target_include_directories(URing PRIVATE Source)
-target_compile_definitions(URing PUBLIC
+target_include_directories(CCRing PRIVATE Source)
+target_compile_definitions(CCRing PUBLIC
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0
     JUCE_VST3_CAN_REPLACE_VST2=0)
@@ -79,7 +79,7 @@ set_target_properties(mutable_plaits PROPERTIES POSITION_INDEPENDENT_CODE ON)
 juce_add_binary_data(URingFonts HEADER_NAME URingFonts.h NAMESPACE URingFonts SOURCES Resources/Montserrat-Bold.ttf)
 set_target_properties(URingFonts PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-target_link_libraries(URing
+target_link_libraries(CCRing
     PRIVATE URingFonts mutable_plaits
     PRIVATE juce::juce_audio_utils juce::juce_dsp
     PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
@@ -94,7 +94,7 @@ target_sources(URingDemo PRIVATE
 target_include_directories(URingDemo PRIVATE Source)
 target_compile_definitions(URingDemo PRIVATE
     URING_VOICE_METER=1
-    JucePlugin_Name="URing"
+    JucePlugin_Name="CCRing"
     JUCE_MODAL_LOOPS_PERMITTED=1
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=0)

@@ -401,11 +401,11 @@ public:
         g.fillEllipse (r.getX() + 5.0f, r.getY() + 13.0f, 12.0f, 12.0f);
         g.setColour (Palette::text);
         g.setFont (uiFont (34.0f).withExtraKerningFactor (0.25f));
-        g.drawText ("URING", r.withTrimmedLeft (34.0f).removeFromTop (40.0f), Justification::centredLeft);
+        g.drawText ("CCRING", r.withTrimmedLeft (34.0f).removeFromTop (40.0f), Justification::centredLeft);
         r.removeFromTop (44.0f);
         g.setColour (Palette::dim);
         g.setFont (uiFont (11.0f).withExtraKerningFactor (0.2f));
-        g.drawText (String::fromUTF8 (mm::lang::spanish() ? "MONSTRI AUDIO   \xc2\xb7   VERSI\xc3\x93N " : "MONSTRI AUDIO   \xc2\xb7   VERSION ") + URING_VERSION,
+        g.drawText (String::fromUTF8 (mm::lang::spanish() ? "CCR   \xc2\xb7   VERSI\xc3\x93N " : "CCR   \xc2\xb7   VERSION ") + URING_VERSION,
                     r.removeFromTop (18.0f), Justification::centredLeft);
 
         // Idioma: ENGLISH / ESPAÑOL (se guarda para todas las ventanas de URing)
@@ -440,7 +440,7 @@ public:
                                             "(\xc3\x89milie Gillet), MIT license. Typeface: Montserrat, SIL Open Font License."), 2);
         block ("COMPUTER KEYBOARD", "A W S E D F T G Y H U J K = notes     Z / X = octave     C / V = velocity\n"
                                     "Right-click a knob: MIDI learn     Double-click: default value", 2);
-        block ("FREE & OPEN SOURCE", "URing is free software (GNU AGPL-3.0). If it makes your music better,\n"
+        block ("FREE & OPEN SOURCE", "CCRing is free software (GNU AGPL-3.0). If it makes your music better,\n"
                                      "a small donation helps keep it alive and growing.", 2);
         g.setColour (Palette::text.withAlpha (0.85f));
         g.setFont (uiFont (10.5f));

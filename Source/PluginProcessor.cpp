@@ -1320,7 +1320,28 @@ void URingAudioProcessor::clearPatches()
 //==============================================================================
 juce::File URingAudioProcessor::userPresetFolder()
 {
-    return juce::File::getSpecialLocation (juce::File::userMusicDirectory).getChildFile ("URing").getChildFile ("Presets");
+    // ~/Music/CCRing/Presets. La primera vez trae los presets de usuario y favoritos de URing (~/Music/URing)
+    const auto music = juce::File::getSpecialLocation (juce::File::userMusicDirectory);
+    const auto folder = music.getChildFile ("CCRing").getChildFile ("Presets");
+    static bool migrated = false;
+    if (! migrated)
+    {
+        migrated = true;
+        const auto old = music.getChildFile ("URing");
+        if (! folder.isDirectory() && old.getChildFile ("Presets").isDirectory())
+        {
+            folder.createDirectory();
+            for (const auto& f : old.getChildFile ("Presets").findChildFiles (juce::File::findFiles, false, "*.uring"))
+                f.copyFileTo (folder.getChildFile (f.getFileName()));
+        }
+        const auto fav = folder.getParentDirectory().getChildFile ("Favorites.txt");
+        if (! fav.existsAsFile() && old.getChildFile ("Favorites.txt").existsAsFile())
+        {
+            folder.getParentDirectory().createDirectory();
+            old.getChildFile ("Favorites.txt").copyFileTo (fav);
+        }
+    }
+    return folder;
 }
 
 juce::StringArray URingAudioProcessor::getUserPresetNames() const

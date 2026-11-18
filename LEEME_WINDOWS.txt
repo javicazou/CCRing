@@ -1,4 +1,4 @@
-URing 1.5.0 - Monstri Audio - WINDOWS
+CCRing 1.5.0 - CCR - WINDOWS
 
 El plugin para Windows se compila en tu PC (una sola vez, unos 10-15 minutos).
 
@@ -6,13 +6,13 @@ El plugin para Windows se compila en tu PC (una sola vez, unos 10-15 minutos).
    - Visual Studio 2022 Community, marcando "Desarrollo para el escritorio con C++"
      https://visualstudio.microsoft.com/es/vs/community/
    - Git para Windows: https://git-scm.com/download/win
-2. Descomprime este zip en una carpeta (por ejemplo Documentos\URing).
+2. Descomprime este zip en una carpeta (por ejemplo Documentos\CCRing).
 3. Entra a la carpeta "windows", clic derecho en INSTALAR_EN_WINDOWS.bat
    -> "Ejecutar como administrador". Espera a que diga [OK].
 4. Ableton Live: Preferencias -> Plug-ins -> activar "Use VST3 Plug-in System Folder"
-   y Re-escanear. URing aparece en Plug-ins -> VST3.
+   y Re-escanear. CCRing aparece en Plug-ins -> VST3.
 
-Se instala en C:\Program Files\Common Files\VST3\URing.vst3
+Se instala en C:\Program Files\Common Files\VST3\CCRing.vst3
 Requiere Windows 10/11 de 64 bits.
 
 CREDITOS

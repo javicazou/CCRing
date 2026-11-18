@@ -1,6 +1,6 @@
 # Créditos y licencias de terceros
 
-URing © 2026 Monstri Audio — GNU AGPL-3.0 (ver `LICENSE`).
+CCRing © 2026 CCR — GNU AGPL-3.0 (ver `LICENSE`).
 
 | Componente | Autor | Licencia | Dónde |
 |---|---|---|---|
@@ -14,6 +14,6 @@ URing © 2026 Monstri Audio — GNU AGPL-3.0 (ver `LICENSE`).
 | Voz del video tutorial: **Piper es_AR "Daniela"** | Proyecto Piper, datos OpenSLR 61 | CC BY-SA 4.0 | solo en el video, no en el plugin |
 
 VST es una marca registrada de Steinberg Media Technologies GmbH. Audio Units es una marca de
-Apple Inc. Mutable Instruments, Plaits, Clouds y Marbles son marcas de sus respectivos dueños; URing no está
+Apple Inc. Mutable Instruments, Plaits, Clouds y Marbles son marcas de sus respectivos dueños; CCRing no está
 afiliado a ellos. Los nombres de instrumentos (marimba, mbira, steel pan, etc.) se usan en forma
 genérica.

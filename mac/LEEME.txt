@@ -1,11 +1,11 @@
-URing @VERSION@ — Monstri Audio
+CCRing @VERSION@ — CCR
 Sintetizador de modelado físico, gratis y de código libre.
 Para: @ARCH@, macOS 11 o superior.
 
 INSTALAR
 1. Doble clic en @PKG@ y seguí los pasos (pide la contraseña de tu Mac).
 2. Si macOS dice que "no puede verificar al desarrollador":
-     URing no está firmado por Apple porque es un proyecto gratuito; es normal.
+     CCRing no está firmado por Apple porque es un proyecto gratuito; es normal.
      - macOS 13 o más nuevo: Ajustes del Sistema → Privacidad y seguridad →
        bajá hasta abajo → "Abrir igualmente".
      - macOS 11/12: clic derecho (o Control + clic) sobre el .pkg → Abrir → Abrir.
@@ -14,38 +14,38 @@ INSTALAR
        Folders" y "Use Audio Units" → Re-escanear.
      - Logic Pro: Ajustes → Plug-in Manager → Restablecer y reescanear selección.
      - Reaper: Preferences → Plug-ins → VST → Re-scan.
-   URing aparece dentro de "Monstri Audio".
-4. Sin DAW: Aplicaciones → Monstri Audio → URing.
+   CCRing aparece dentro de "CCR".
+4. Sin DAW: Aplicaciones → CCR → CCRing.
 
 ¿NO APARECE O MACOS LO BLOQUEA?
-Doble clic en "Allow URing.command" (si macOS también lo frena: clic derecho → Abrir).
-Le quita la cuarentena a URing. Después cerrá y abrí tu DAW.
+Doble clic en "Allow CCRing.command" (si macOS también lo frena: clic derecho → Abrir).
+Le quita la cuarentena a CCRing. Después cerrá y abrí tu DAW.
 
 QUÉ HAY EN ESTA CARPETA
 - @PKG@        el instalador
-- URing_Manual_ES.pdf     el manual en español (9 páginas, con capturas)
-- URing_Manual_EN.pdf     el manual en inglés
-- Allow URing.command     solo si el plugin no aparece
+- CCRing_Manual_ES.pdf     el manual en español (9 páginas, con capturas)
+- CCRing_Manual_EN.pdf     el manual en inglés
+- Allow CCRing.command     solo si el plugin no aparece
 - README.txt              estas instrucciones en inglés
 - LICENSE.txt             licencia GNU AGPL-3.0
 - CREDITOS.txt            créditos de terceros
 
 IDIOMA
-URing arranca en inglés. Para verlo en español: tocá el logo de URing (arriba a
+CCRing arranca en inglés. Para verlo en español: tocá el logo de CCRing (arriba a
 la izquierda) → LANGUAGE → ESPAÑOL. Queda guardado.
 
 DESINSTALAR
-Borrá /Library/Audio/Plug-Ins/VST3/URing.vst3,
-/Library/Audio/Plug-Ins/Components/URing.component
-y Aplicaciones/Monstri Audio/URing.app
+Borrá /Library/Audio/Plug-Ins/VST3/CCRing.vst3,
+/Library/Audio/Plug-Ins/Components/CCRing.component
+y Aplicaciones/CCR/CCRing.app
 
 LIBRE Y GRATIS
-URing es software libre (GNU AGPL-3.0): usalo en tu música (también comercial),
+CCRing es software libre (GNU AGPL-3.0): usalo en tu música (también comercial),
 compartilo y mejoralo. Si te sirve, podés apoyarlo con una donación:
 https://paypal.me/JavierCazou  ·  Mercado Pago (Argentina): alias nodrama.perro
-(o desde el plugin: tocá el logo de URing, arriba a la izquierda → DONATE).
+(o desde el plugin: tocá el logo de CCRing, arriba a la izquierda → DONATE).
 
 CRÉDITOS
 El motor C, la página TEXTURE y el modo MARBLES usan el código de Plaits,
 Clouds y Marbles de Mutable Instruments (Émilie Gillet), licencia MIT. Interfaz con JUCE (AGPLv3). Tipografía Montserrat (SIL OFL).
-URing no está afiliado a Mutable Instruments.
+CCRing no está afiliado a Mutable Instruments.

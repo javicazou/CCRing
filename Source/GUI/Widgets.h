@@ -260,7 +260,7 @@ public:
     }
 
 private:
-    juce::String line1 { "URING" }, line2 { "PHYSICAL MODELS READY" }, idleTitle;
+    juce::String line1 { "CCRING" }, line2 { "PHYSICAL MODELS READY" }, idleTitle;
     std::vector<float> samples;
     juce::uint32 shownAt = 0;
     bool hasMessage = false;

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  URing — compilación e instalación automática para macOS
+#  CCRing — compilación e instalación automática para macOS
 #  VST3 + AU, Universal Binary (arm64 + x86_64), JUCE vía CMake FetchContent.
 #
 #  Uso:
@@ -16,7 +16,7 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="$PROJECT_DIR/build"
 TOOLS_DIR="$PROJECT_DIR/.tools"
 [[ -d "$PROJECT_DIR/../.tools/venv" ]] && TOOLS_DIR="$PROJECT_DIR/../.tools"   # comparte herramientas con Cazotone
-TARGET="URing"
+TARGET="CCRing"
 CONFIG="Release"
 AU_TYPE="aumu"; AU_SUBTYPE="Urng"; AU_MANU="Jvto"   # deben coincidir con CMakeLists.txt
 
@@ -205,7 +205,7 @@ if [[ $RUN_AUVAL -eq 1 ]]; then
 fi
 
 echo
-ok "¡Listo! URing instalado en $DEST"
+ok "¡Listo! CCRing instalado en $DEST"
 echo "   • Ableton Live: Preferencias → Plug-ins → Re-escanear (activar 'Use VST3 Plug-in System Folders')"
 echo "   • Logic Pro:    Ajustes → Plug-in Manager → Restablecer y reescanear selección"
 echo "   • Reaper:       Preferences → Plug-ins → VST → Re-scan"
