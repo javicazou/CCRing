@@ -158,7 +158,7 @@ EOF
 # 3. Instalador
 mkdir -p "$DIST_DIR"
 PKG="$DIST_DIR/$NAME-$VERSION-$ARCH_LABEL.pkg"
-log "Creando $PKG…"
+log "Creando ${PKG}…"
 cat > "$WORK/distribution.xml" <<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
