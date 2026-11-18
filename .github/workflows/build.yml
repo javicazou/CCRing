@@ -8,7 +8,8 @@ name: Build
 on:
   push:
     branches: [ main ]
-    tags: [ 'v*' ]
+    # Las versiones (Releases) se publican a mano con el instalador de Mac probado localmente
+    # y el zip de Windows que compila este flujo.
   pull_request:
   workflow_dispatch:
 
@@ -42,7 +43,7 @@ jobs:
         run: cmake -S . -B build-win -G "Visual Studio 17 2022" -A x64
 
       - name: Compilar VST3 y Standalone
-        run: cmake --build build-win --config Release --target CCRing_VST3 CCRing_Standalone --parallel
+        run: cmake --build build-win --config Release --target CCRing_VST3 CCRing_CLAP CCRing_Standalone --parallel
 
       - name: Armar el paquete
         shell: pwsh
@@ -51,6 +52,7 @@ jobs:
           $out = "CCRing-$version-Windows"
           New-Item -ItemType Directory -Force -Path $out | Out-Null
           Copy-Item -Recurse "build-win/CCRing_artefacts/Release/VST3/CCRing.vst3" "$out/CCRing.vst3"
+          Copy-Item "build-win/CCRing_artefacts/Release/CLAP/CCRing.clap" "$out/CCRing.clap"
           Copy-Item "build-win/CCRing_artefacts/Release/Standalone/CCRing.exe" "$out/CCRing.exe"
           (Get-Content "windows/LEEME_PLUGIN_WINDOWS.txt") -replace '@VERSION@', $version | Set-Content "$out/LEEME.txt"
           (Get-Content "windows/README_PLUGIN_WINDOWS.txt") -replace '@VERSION@', $version | Set-Content "$out/README.txt"

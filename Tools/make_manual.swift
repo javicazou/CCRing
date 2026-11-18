@@ -154,13 +154,13 @@ columns("""
 ## Instalar
 - **Mac:** doble clic en el .pkg (si avisa "desarrollador no identificado": clic derecho > Abrir).
 - **Windows:** ver LEEME_WINDOWS.txt dentro del zip.
-- En **Ableton Live**: Preferencias > Plug-ins > Re-escanear. CCRing aparece en **CCR** (VST3 y Audio Units).
+- En **Ableton Live**: Preferencias > Plug-ins > Re-escanear. CCRing aparece en **CCR** (VST3, Audio Units y CLAP para Bitwig o Reaper).
 - Cargalo en una **pista MIDI**. Arranca siempre en **−20 dB**.
 ## Barra superior (de izquierda a derecha)
 - **Logo:** abre los créditos, los atajos, las donaciones y el **idioma** (English / Español).
 - **SYNTH · FX · SEQ · LIVE · ENGINE C · TEXTURE:** las seis páginas (en español: SINTE · FX · SEQ · VIVO · MOTOR C · TEXTURA).
 - **Lista:** abre el **buscador de presets** (Cmd+F).
-- **< nombre >:** preset anterior / siguiente / menú.
+- **< nombre >:** preset anterior / siguiente / menú. **Dado:** un sonido nuevo al azar con el volumen parejo (clic derecho: qué sortear, variar, o **un sonido nuevo en cada nota**).
 """, """
 - **Flechas curvas:** **deshacer / rehacer** (Cmd+Z / Cmd+Shift+Z), hasta 100 pasos: perillas, pasos, cables y presets.
 - **SAVE:** guarda tu versión como preset de usuario. Un **asterisco *** indica que tocaste algo; el original nunca se pisa.
@@ -329,6 +329,7 @@ columns("""
 - Poné **STEPS** distintos en SEQ 1 y SEQ 2 (16 y 7, 16 y 12): el dibujo se desfasa y nunca se repite igual.
 - **PROB** al 70 % y **MUTATE** bajo hacen que el loop viva solo.
 - Usá **LOCK** en TIMBRE del motor C para que cada golpe tenga otro color.
+- Prendé el **dado en cada nota** con el secuenciador sonando: cada golpe es otro instrumento, ideal para percusiones que nunca se repiten.
 - **Plaits Kit Walk** arma una batería entera con el carril **MOD**: bombo, hats y snare en un solo secuenciador.
 - **Kick Into Modal** y **Modal Into Strings** muestran el C > A FEED: un golpe sintético haciendo sonar un objeto real.
 - Dejá el volumen en −20 dB y subí en el mixer de Ableton: así el delay y la reverb no saturan.

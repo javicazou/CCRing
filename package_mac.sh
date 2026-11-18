@@ -34,9 +34,9 @@ GEN=(); command -v ninja >/dev/null && GEN=(-G Ninja)
 log "Compilando $NAME $VERSION (Release, $ARCHS)…"
 cmake -S "$PROJECT_DIR" -B "$BUILD_DIR" "${GEN[@]+"${GEN[@]}"}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="$ARCHS" \
       -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 "${JUCE_ARGS[@]+"${JUCE_ARGS[@]}"}" >/dev/null
-cmake --build "$BUILD_DIR" --config Release --target "${NAME}_VST3" "${NAME}_AU" "${NAME}_Standalone" >/dev/null
+cmake --build "$BUILD_DIR" --config Release --target "${NAME}_VST3" "${NAME}_AU" "${NAME}_CLAP" "${NAME}_Standalone" >/dev/null
 for b in "$ARTEFACTS/VST3/$NAME.vst3/Contents/MacOS/$NAME" "$ARTEFACTS/AU/$NAME.component/Contents/MacOS/$NAME" \
-         "$ARTEFACTS/Standalone/$NAME.app/Contents/MacOS/$NAME"; do
+         "$ARTEFACTS/CLAP/$NAME.clap/Contents/MacOS/$NAME" "$ARTEFACTS/Standalone/$NAME.app/Contents/MacOS/$NAME"; do
   for a in ${ARCHS//;/ }; do lipo -archs "$b" | grep -q "$a" || die "$b no tiene $a"; done
 done
 ok "Binarios: $(lipo -archs "$ARTEFACTS/AU/$NAME.component/Contents/MacOS/$NAME") (macOS 11 o superior)"
@@ -45,11 +45,12 @@ ok "Binarios: $(lipo -archs "$ARTEFACTS/AU/$NAME.component/Contents/MacOS/$NAME"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 PLUG="$WORK/plug"; APP="$WORK/app"
-mkdir -p "$PLUG/VST3" "$PLUG/Components" "$APP" "$WORK/scripts" "$WORK/resources" "$WORK/zip"
+mkdir -p "$PLUG/VST3" "$PLUG/Components" "$PLUG/CLAP" "$APP" "$WORK/scripts" "$WORK/resources" "$WORK/zip"
 ditto "$ARTEFACTS/VST3/$NAME.vst3"      "$PLUG/VST3/$NAME.vst3"
 ditto "$ARTEFACTS/AU/$NAME.component"   "$PLUG/Components/$NAME.component"
+ditto "$ARTEFACTS/CLAP/$NAME.clap"      "$PLUG/CLAP/$NAME.clap"
 ditto "$ARTEFACTS/Standalone/$NAME.app" "$APP/$NAME.app"
-for b in "$PLUG/VST3/$NAME.vst3" "$PLUG/Components/$NAME.component" "$APP/$NAME.app"; do
+for b in "$PLUG/VST3/$NAME.vst3" "$PLUG/Components/$NAME.component" "$PLUG/CLAP/$NAME.clap" "$APP/$NAME.app"; do
   xattr -cr "$b"
   codesign --force --deep --sign - "$b" >/dev/null 2>&1   # firma local (ad-hoc): obligatoria en Apple Silicon
   xattr -cr "$b"
@@ -66,7 +67,7 @@ for old in "/Library/Audio/Plug-Ins/VST3/URing.vst3" "/Library/Audio/Plug-Ins/Co
   [ -e "$old" ] && rm -rf "$old"
 done
 rmdir "/Applications/Monstri Audio" 2>/dev/null || true
-for p in "/Library/Audio/Plug-Ins/VST3/CCRing.vst3" "/Library/Audio/Plug-Ins/Components/CCRing.component" \
+for p in "/Library/Audio/Plug-Ins/VST3/CCRing.vst3" "/Library/Audio/Plug-Ins/Components/CCRing.component" "/Library/Audio/Plug-Ins/CLAP/CCRing.clap" \
          "/Applications/CCR/CCRing.app"; do
   [ -e "$p" ] && xattr -dr com.apple.quarantine "$p" 2>/dev/null
 done
@@ -102,6 +103,7 @@ cat > "$ES/welcome.html" <<EOF
 <ul>
 <li><b>VST3</b> → /Library/Audio/Plug-Ins/VST3/CCRing.vst3</li>
 <li><b>Audio Unit</b> → /Library/Audio/Plug-Ins/Components/CCRing.component</li>
+<li><b>CLAP</b> → /Library/Audio/Plug-Ins/CLAP/CCRing.clap (Bitwig, Reaper…)</li>
 <li><b>App Standalone</b> → Aplicaciones/CCR/CCRing.app</li>
 </ul>
 <p>Requisitos: $ARCH_TEXT, macOS 11 o superior.</p>
@@ -118,6 +120,7 @@ cat > "$EN/welcome.html" <<EOF
 <ul>
 <li><b>VST3</b> → /Library/Audio/Plug-Ins/VST3/CCRing.vst3</li>
 <li><b>Audio Unit</b> → /Library/Audio/Plug-Ins/Components/CCRing.component</li>
+<li><b>CLAP</b> → /Library/Audio/Plug-Ins/CLAP/CCRing.clap (Bitwig, Reaper…)</li>
 <li><b>Standalone app</b> → Applications/CCR/CCRing.app</li>
 </ul>
 <p>Requirements: $ARCH_EN, macOS 11 or later.</p>
@@ -179,7 +182,7 @@ cat > "$WORK/distribution.xml" <<EOF
   <options customize="allow" require-scripts="false" hostArchitectures="$HOST_ARCHS"/>
   <volume-check><allowed-os-versions><os-version min="11.0"/></allowed-os-versions></volume-check>
   <choices-outline><line choice="plugins"/><line choice="app"/></choices-outline>
-  <choice id="plugins" title="CCRing VST3 + Audio Unit" description="Plug-ins for your DAW / Plugins para tu DAW (/Library/Audio/Plug-Ins).">
+  <choice id="plugins" title="CCRing VST3 + Audio Unit + CLAP" description="Plug-ins for your DAW / Plugins para tu DAW (/Library/Audio/Plug-Ins).">
     <pkg-ref id="$PKG_ID.plugins"/>
   </choice>
   <choice id="app" title="CCRing (Standalone app)" description="Play CCRing without a DAW / Para tocar CCRing sin DAW (Applications/CCR).">

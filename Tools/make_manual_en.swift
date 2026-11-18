@@ -155,13 +155,13 @@ columns("""
 ## Install
 - **Mac:** double-click the .pkg (if macOS warns about an "unidentified developer": right-click > Open, or System Settings > Privacy & Security > Open Anyway).
 - **Windows:** see README.txt inside the zip.
-- In **Ableton Live**: Settings > Plug-Ins > Rescan. CCRing shows up under **CCR** (VST3 and Audio Units).
+- In **Ableton Live**: Settings > Plug-Ins > Rescan. CCRing shows up under **CCR** (VST3, Audio Units and CLAP for Bitwig or Reaper).
 - Load it on a **MIDI track**. It always starts at **−20 dB**.
 ## Top bar (left to right)
 - **Logo:** credits, shortcuts, donations and **language** (English / Español).
 - **SYNTH · FX · SEQ · LIVE · ENGINE C · TEXTURE:** the six pages.
 - **List icon:** opens the **preset browser** (Cmd+F).
-- **< name >:** previous / next preset / menu.
+- **< name >:** previous / next preset / menu. **Dice:** a new random, level-matched sound (right-click: what to randomize, vary, or **a new sound on every note**).
 """, """
 - **Curved arrows:** **undo / redo** (Cmd+Z / Cmd+Shift+Z), up to 100 steps: knobs, steps, cables and presets.
 - **SAVE:** stores your version as a user preset. An **asterisk *** means you changed something; the original is never overwritten.
@@ -330,6 +330,7 @@ columns("""
 - Use different **STEPS** in SEQ 1 and SEQ 2 (16 and 7, 16 and 12): the patterns drift apart and never repeat the same way.
 - **PROB** at 70 % and a little **MUTATE** make the loop live on its own.
 - Use **LOCK** on engine C TIMBRE so every hit has a different colour.
+- Turn on **dice on every note** while the sequencer plays: every hit is a different instrument, great for percussion that never repeats.
 - **Plaits Kit Walk** builds a whole kit with the **MOD** lane: kick, hats and snare from one sequencer.
 - **Kick Into Modal** and **Modal Into Strings** show C > A FEED: a synthetic hit making a real object ring.
 - Leave the volume at −20 dB and raise it on the Ableton mixer, so delay and reverb never clip.

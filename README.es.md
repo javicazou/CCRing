@@ -23,7 +23,7 @@ Además:
 - **165 presets** con el volumen igualado: bajos, pads, teclados, percusión, drones, texturas y secuencias.
 - Interfaz en **inglés o español** (tocá el logo → IDIOMA).
 
-Novedades de la **1.5**: carril **MOD** en el secuenciador (otro modelo del motor C en cada paso: una batería entera desde un solo secuenciador), **motor C como excitador** del resonador A y **C > B FEED**, cables que se pueden **mostrar, hacer transparentes u ocultar** (el mouse sobre un jack muestra lo conectado), **ESCUCHAR** en el buscador de presets, y el secuenciador siempre arranca **apagado** hasta que tocás RUN.
+Novedades de la **1.5**: un **dado** (sonidos al azar con el volumen parejo, o un sonido nuevo en cada nota), carril **MOD** en el secuenciador (otro modelo del motor C en cada paso: una batería entera desde un solo secuenciador), **motor C como excitador** del resonador A y **C > B FEED**, cables que se pueden **mostrar, hacer transparentes u ocultar** (el mouse sobre un jack muestra lo conectado), **ESCUCHAR** en el buscador de presets, y el secuenciador siempre arranca **apagado** hasta que tocás RUN.
 
 | Secuenciador | Motor C (Macro) | Texture |
 |---|---|---|

@@ -11,6 +11,11 @@ xcopy "CCRing.vst3" "%DST%\" /E /I /Y >nul || (
   echo [X] No se pudo copiar. Ejecuta este archivo como administrador.
   pause & exit /b 1
 )
+if exist "CCRing.clap" (
+  if not exist "%CommonProgramFiles%\CLAP" mkdir "%CommonProgramFiles%\CLAP"
+  copy /Y "CCRing.clap" "%CommonProgramFiles%\CLAP\CCRing.clap" >nul
+  echo [OK] CCRing.clap instalado en %CommonProgramFiles%\CLAP
+)
 echo [OK] CCRing instalado en %DST%
 echo      En Ableton: Preferencias -^> Plug-ins -^> Re-escanear.
 pause

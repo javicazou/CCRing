@@ -85,6 +85,23 @@ target_link_libraries(CCRing
     PRIVATE juce::juce_audio_utils juce::juce_dsp
     PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 
+# ---------------------------------------------------------------- CLAP (Bitwig, Reaper…) con clap-juce-extensions (MIT)
+# Para usar una copia local: -DFETCHCONTENT_SOURCE_DIR_CLAP-JUCE-EXTENSIONS=/ruta/clap-juce-extensions
+option(CCRING_CLAP "Compilar también el formato CLAP" ON)
+if (CCRING_CLAP)
+    FetchContent_Declare(clap-juce-extensions
+        GIT_REPOSITORY https://github.com/free-audio/clap-juce-extensions.git
+        GIT_TAG        3837f4a6ed2ab0ba46aba69ae5b7041c7c64ce74   # main del 17/11/2026 (compatible con JUCE 8)
+        GIT_SHALLOW    FALSE
+        GIT_SUBMODULES_RECURSE TRUE)
+    FetchContent_MakeAvailable(clap-juce-extensions)
+    clap_juce_extensions_plugin(TARGET CCRing
+        CLAP_ID "com.ccr.ccring"
+        CLAP_FEATURES instrument synthesizer stereo
+        CLAP_MANUAL_URL "https://github.com/javicazou/CCRing"
+        CLAP_SUPPORT_URL "https://github.com/javicazou/CCRing/issues")
+endif()
+
 # ---------------------------------------------------------------- Demo (no se instala)
 # Renderiza un WAV de prueba y capturas de la GUI: cmake --build build --target URingDemo
 juce_add_console_app(URingDemo PRODUCT_NAME "URingDemo")

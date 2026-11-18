@@ -3,7 +3,7 @@
 # CCRing
 
 **Free and open-source physical-modelling synth with granular texture** — by CCR.
-VST3 / Audio Unit / Standalone for macOS (Intel and Apple Silicon) and Windows.
+VST3 / Audio Unit / CLAP / Standalone for macOS (Intel and Apple Silicon) and Windows.
 
 *[Leer en español](README.es.md)*
 
@@ -25,7 +25,7 @@ Plus:
 - **165 presets** with matched loudness: basses, pads, keys, percussion, drones, textures and sequences.
 - Interface in **English or Spanish** (click the logo → LANGUAGE).
 
-New in **1.5**: a **MOD lane** in the sequencer (a different engine C model on every step — a whole kit from one sequencer), **engine C as the exciter** of resonator A and **C > B feed**, cables that can be **shown, faded or hidden** (hover a jack to see what is patched), **PREVIEW** in the preset browser, and the sequencer always starts **off** until you press RUN.
+New in **1.5**: a **dice** button (level-matched random sounds, or a new sound on every note), a **MOD lane** in the sequencer (a different engine C model on every step — a whole kit from one sequencer), **engine C as the exciter** of resonator A and **C > B feed**, cables that can be **shown, faded or hidden** (hover a jack to see what is patched), **PREVIEW** in the preset browser, and the sequencer always starts **off** until you press RUN.
 
 | Sequencer | Engine C (Macro) | Texture |
 |---|---|---|
