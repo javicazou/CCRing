@@ -1,0 +1,98 @@
+# Compila URing en máquinas de GitHub:
+#  - Mac: instalador .pkg universal (Intel + Apple Silicon) + zip con manual, licencia y "Permitir URing"
+#  - Windows: VST3 + app Standalone (64 bits) + instalador .bat
+# Cada push a main deja los archivos en Actions → ejecución → Artifacts.
+# Al subir un tag "v1.3.0" se crea además una Release pública con los dos zips.
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Ninja
+        run: brew install ninja
+
+      - name: Compilar y empaquetar (universal)
+        run: ./package_mac.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: URing-Mac
+          path: dist/*.zip
+
+  windows:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar (Visual Studio 2022, x64)
+        run: cmake -S . -B build-win -G "Visual Studio 17 2022" -A x64
+
+      - name: Compilar VST3 y Standalone
+        run: cmake --build build-win --config Release --target URing_VST3 URing_Standalone --parallel
+
+      - name: Armar el paquete
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path CMakeLists.txt -Pattern 'project\(URing VERSION ([0-9.]+)').Matches[0].Groups[1].Value
+          $out = "URing-$version-Windows"
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          Copy-Item -Recurse "build-win/URing_artefacts/Release/VST3/URing.vst3" "$out/URing.vst3"
+          Copy-Item "build-win/URing_artefacts/Release/Standalone/URing.exe" "$out/URing.exe"
+          (Get-Content "windows/LEEME_PLUGIN_WINDOWS.txt") -replace '@VERSION@', $version | Set-Content "$out/LEEME.txt"
+          (Get-Content "windows/README_PLUGIN_WINDOWS.txt") -replace '@VERSION@', $version | Set-Content "$out/README.txt"
+          Copy-Item "windows/INSTALAR_PLUGIN.bat" "$out/INSTALAR_PLUGIN.bat"
+          Copy-Item "LICENSE" "$out/LICENSE.txt"
+          Copy-Item "CREDITOS.md" "$out/CREDITOS.txt"
+          Copy-Item "docs/URing_Manual_EN.pdf" "$out/URing_Manual_EN.pdf"
+          Copy-Item "docs/URing_Manual_ES.pdf" "$out/URing_Manual_ES.pdf"
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path "$out/*" -DestinationPath "dist/$out.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: URing-Windows
+          path: dist/*.zip
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [ mac, windows ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publicar la Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          body: |
+            **URing ${{ github.ref_name }}** — free and open-source physical-modelling synth / sintetizador de modelado físico, gratis y de código libre.
+
+            - **Mac** (Intel & Apple Silicon, macOS 11+): download `URing-…-Mac.zip`, open the `.pkg` and read `README.txt`.
+            - **Windows** (10/11, 64-bit): download `URing-…-Windows.zip` and run `INSTALAR_PLUGIN.bat` as administrator.
+            - Not signed by Apple/Microsoft (it is free): the first time the system warns you; the README explains how to open it.
+            - Donations ♥ https://paypal.me/JavierCazou
+
+            ---
+
+
+            - **Mac** (Intel y Apple Silicon, macOS 11+): bajá `URing-…-Mac.zip`, abrí el `.pkg` y leé el `LEEME.txt`.
+            - **Windows** (10/11, 64 bits): bajá `URing-…-Windows.zip` y ejecutá `INSTALAR_PLUGIN.bat` como administrador.
+
+            URing no está firmado por Apple ni Microsoft (es gratuito): la primera vez el sistema avisa; en el LEEME está cómo abrirlo.
+            Si te gusta, podés apoyarlo con una donación ♥ en https://paypal.me/JavierCazou (o desde el plugin: logo de URing → DONATE).

@@ -1,0 +1,8 @@
+build*/
+dist/
+.DS_Store
+.tools/
+*.log
+CONTEXTO_PARA_CLAUDE.md
+Tools/media/
+demo/

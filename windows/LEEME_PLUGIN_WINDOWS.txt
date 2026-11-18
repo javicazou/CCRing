@@ -1,0 +1,27 @@
+URing @VERSION@ - Monstri Audio - WINDOWS (64 bits, Windows 10/11)
+
+INSTALAR
+1. Descomprime este zip.
+2. Clic derecho en INSTALAR_PLUGIN.bat -> "Ejecutar como administrador".
+   (o copia a mano la carpeta URing.vst3 en C:\Program Files\Common Files\VST3\)
+3. Ableton Live: Preferencias -> Plug-ins -> activar "Use VST3 Plug-in System Folder"
+   y Re-escanear. URing aparece en Plug-ins -> VST3.
+
+URing.exe es la version suelta (sin DAW): se abre con doble clic.
+Si Windows muestra "Windows protegio su PC": Mas informacion -> Ejecutar de todas formas
+(el programa no esta firmado con un certificado comercial).
+
+LIBRE Y GRATIS
+URing es software libre (GNU AGPL-3.0, ver LICENSE.txt). Si te sirve, podes apoyarlo
+con una donacion: https://paypal.me/JavierCazou
+(o desde el plugin: toca el logo de URing, arriba a la izquierda -> DONATE).
+
+IDIOMA
+URing arranca en ingles. Para verlo en espanol: toca el logo de URing (arriba a la
+izquierda) -> LANGUAGE -> ESPANOL.
+
+CREDITOS
+El motor C, TEXTURE y MARBLES usan codigo de Plaits, Clouds y Marbles de Mutable
+Instruments (Emilie Gillet), licencia MIT. Interfaz con JUCE (AGPLv3).
+Tipografia Montserrat (SIL OFL). Ver CREDITOS.txt.
+Manuales: URing_Manual_ES.pdf (espanol) y URing_Manual_EN.pdf (ingles).
