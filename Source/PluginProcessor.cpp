@@ -1637,11 +1637,11 @@ juce::String URingAudioProcessor::randomizeSound (RandomScope scope, bool vary)
         if (scope == RandMod) parts.add (juce::String (cables) + (cables == 1 ? " CABLE" : " CABLES"));
     }
 
-    // Como un preset nuevo: secuenciador apagado, volumen a -20 dB y un nivel propio parejo
+    // Como un preset nuevo (volumen a -20 dB y un nivel propio parejo), pero el secuenciador sigue
+    // como estaba: si está sonando, las notas siguientes ya salen con el sonido nuevo
     if (all)
     {
         const SuppressTouch st (*this);
-        setParamValue (IDs::seqOn, 0.0f);
         setParamValue (IDs::limiterOn, 1.0f);
         presetTrimDb = randomTrimDb;
         setStartVolume();

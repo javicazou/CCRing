@@ -397,8 +397,27 @@ int main (int argc, char** argv)
         proc.undoTick (true);
         proc.undo();
         check (proc.getCurrentPresetName() == "Felt Upright" && proc.apvts.getRawParameterValue (IDs::aModel)->load() == aModel, "undo brings back the previous sound");
-        // secuenciador apagado después de un random
-        check (proc.apvts.getRawParameterValue (IDs::seqOn)->load() < 0.5f, "sequencer stays off");
+        // el dado no toca el secuenciador: apagado sigue apagado, prendido sigue sonando
+        check (proc.apvts.getRawParameterValue (IDs::seqOn)->load() < 0.5f, "sequencer off stays off");
+        {
+            DemoPlayHead ph; ph.bpm = 122.0;
+            proc.setPlayHead (&ph);
+            proc.loadPreset (findPreset ("Euclid Plonks"));
+            proc.apvts.getParameter (IDs::seqOn)->setValueNotifyingHost (1.0f);
+            proc.prepareToPlay (tsr, bs);
+            juce::AudioBuffer<float> b (2, bs);
+            auto run = [&] (double secs) { int ons = 0; for (int pos = 0; pos < (int) (secs * tsr); pos += bs)
+                { juce::MidiBuffer m; proc.processBlock (b, m); ph.ppq += bs * ph.bpm / (60.0 * tsr);
+                  for (const auto ev : m) if (ev.getMessage().isNoteOn()) ++ons; } return ons; };
+            proc.apvts.getParameter (IDs::midiOut)->setValueNotifyingHost (1.0f);
+            run (2.0);
+            const auto bModel = proc.apvts.getParameter (IDs::bModel)->getCurrentValueAsText();
+            proc.randomizeSound (URingAudioProcessor::RandAll, false);
+            const int notesAfter = run (3.0);
+            check (proc.apvts.getRawParameterValue (IDs::seqOn)->load() > 0.5f && notesAfter > 4,
+                   "sequencer keeps playing after the dice (" + juce::String (notesAfter) + " notes in 3 s, sound was " + bModel + ")");
+            proc.setPlayHead (nullptr);
+        }
         {   // captura con un sonido al azar cargado
             proc.randomizeSound (URingAudioProcessor::RandAll, false);
             std::unique_ptr<juce::AudioProcessorEditor> editor (proc.createEditor());
