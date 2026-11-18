@@ -64,7 +64,8 @@ struct DataType<FORMAT_12_BIT> {
   
   static inline T Compress(float value) {
     return static_cast<uint16_t>(
-        stmlib::Clip16(static_cast<int32_t>(value * 4096.0f)));
+        stmlib::Clip16(static_cast<int32_t>(  // URing: acotado antes de convertir (sin UB)
+        (value > 8.0f ? 8.0f : (value < -8.0f ? -8.0f : (value == value ? value : 0.0f))) * 4096.0f)));
   }
 };
 
@@ -78,7 +79,8 @@ struct DataType<FORMAT_16_BIT> {
   
   static inline T Compress(float value) {
     return static_cast<uint16_t>(
-        stmlib::Clip16(static_cast<int32_t>(value * 32768.0f)));
+        stmlib::Clip16(static_cast<int32_t>(  // URing: acotado antes de convertir (sin UB)
+        (value > 8.0f ? 8.0f : (value < -8.0f ? -8.0f : (value == value ? value : 0.0f))) * 32768.0f)));
   }
 };
 
