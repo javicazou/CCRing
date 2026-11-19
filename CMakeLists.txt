@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Arquitecturas macOS")
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "macOS mínimo")
 
-project(CCRing VERSION 1.5.0 LANGUAGES C CXX)
+project(CCRing VERSION 1.6.0 LANGUAGES C CXX)   # número interno (DAW / macOS); no se muestra en ningún lado
 add_compile_definitions(URING_VERSION="${PROJECT_VERSION}")
 
 set(CMAKE_CXX_STANDARD 17)

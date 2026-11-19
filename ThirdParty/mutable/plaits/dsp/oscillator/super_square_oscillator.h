@@ -59,6 +59,16 @@ class SuperSquareOscillator {
       float shape,
       float* out,
       size_t size) {
+    // CCRing: an invalid frequency (NaN / negative) or a corrupted phase made the transition loop
+    // below spin forever and hang the host's audio thread. Inputs and state are sanitized here.
+    if (!(frequency > 0.0f)) frequency = 0.0f;
+    if (!(shape >= 0.0f)) shape = 0.0f;
+    if (shape > 1.0f) shape = 1.0f;
+    if (!(master_phase_ >= 0.0f && master_phase_ < 1.0f)) master_phase_ = 0.0f;
+    if (!(slave_phase_ >= 0.0f && slave_phase_ < 1.0f)) slave_phase_ = 0.0f;
+    if (!(master_frequency_ >= 0.0f && master_frequency_ <= kMaxFrequency)) master_frequency_ = 0.0f;
+    if (!(slave_frequency_ >= 0.0f && slave_frequency_ <= kMaxFrequency)) slave_frequency_ = 0.0f;
+    if (!(next_sample_ > -4.0f && next_sample_ < 4.0f)) next_sample_ = 0.0f;
     float master_frequency = frequency;
     frequency *= shape < 0.5f
         ? (0.51f + 0.98f * shape)
@@ -92,7 +102,9 @@ class SuperSquareOscillator {
       master_phase_ += master_frequency;
       if (master_phase_ >= 1.0f) {
         master_phase_ -= 1.0f;
-        reset_time = master_phase_ / master_frequency;
+        reset_time = master_frequency > 0.0f ? master_phase_ / master_frequency : 0.0f;
+        if (!(reset_time >= 0.0f)) reset_time = 0.0f;
+        if (reset_time > 1.0f) reset_time = 1.0f;
       
         float slave_phase_at_reset = slave_phase_ + \
             (1.0f - reset_time) * slave_frequency;
@@ -110,12 +122,13 @@ class SuperSquareOscillator {
       }
       
       slave_phase_ += slave_frequency;
-      while (transition_during_reset || !reset) {
+      int guard = 4;  // CCRing: at most a few transitions per sample (never an endless loop)
+      while ((transition_during_reset || !reset) && guard-- > 0) {
         if (!high_) {
           if (slave_phase_ < 0.5f) {
             break;
           }
-          float t = (slave_phase_ - 0.5f) / slave_frequency;
+          float t = slave_frequency > 0.0f ? (slave_phase_ - 0.5f) / slave_frequency : 0.0f;
           this_sample += stmlib::ThisBlepSample(t);
           next_sample += stmlib::NextBlepSample(t);
           high_ = true;
@@ -126,7 +139,7 @@ class SuperSquareOscillator {
             break;
           }
           slave_phase_ -= 1.0f;
-          float t = slave_phase_ / slave_frequency;
+          float t = slave_frequency > 0.0f ? slave_phase_ / slave_frequency : 0.0f;
           this_sample -= stmlib::ThisBlepSample(t);
           next_sample -= stmlib::NextBlepSample(t);
           high_ = false;
@@ -137,6 +150,7 @@ class SuperSquareOscillator {
         slave_phase_ = reset_time * slave_frequency;
         high_ = false;
       }
+      if (!(slave_phase_ >= 0.0f && slave_phase_ < 1.0f)) slave_phase_ = 0.0f;
     
       next_sample += slave_phase_ < 0.5f ? 0.0f : 1.0f;
       *out++ = 2.0f * this_sample - 1.0f;

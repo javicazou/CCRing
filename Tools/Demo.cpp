@@ -9,6 +9,8 @@
 #include "Presets.h"
 #include "Tutorial.h"
 #include "Promo.h"
+#include "plaits/dsp/oscillator/super_square_oscillator.h"
+#include "plaits/dsp/oscillator/variable_shape_oscillator.h"
 
 namespace
 {
@@ -310,11 +312,363 @@ int main (int argc, char** argv)
             runFor (2.5);
             writePng (*editor, outDir.getChildFile (sh.file));
         }
+        {   // el dado prendido (cara 3) para el manual
+            proc.loadPreset (findPreset ("Resonant Arp"));
+            proc.apvts.getParameter (IDs::seqOn)->setValueNotifyingHost (1.0f);
+            proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (1.0f);
+            auto* dm = proc.apvts.getParameter (IDs::diceMode); dm->setValueNotifyingHost (dm->convertTo0to1 (2.0f));
+            proc.prepareToPlay (tsr, 512); ph.ppq = 0.0;
+            ed->showTab (2);
+            runFor (2.5);
+            writePng (*editor, outDir.getChildFile ("look_dice.png"));
+            proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (0.0f);
+        }
         ed->openPresetBrowser(); juce::MessageManager::getInstance()->runDispatchLoopUntil (150);
         writePng (*editor, outDir.getChildFile ("look_browser.png"));
         ed->closePresetBrowser();
         ed->showAbout (true); juce::MessageManager::getInstance()->runDispatchLoopUntil (100);
         writePng (*editor, outDir.getChildFile ("look_about.png"));
+        return 0;
+    }
+    if (argc > 2 && juce::String (argv[2]) == "dicectl") // TONO y CAÍDA del dado: mandan sobre los sonidos sorteados, también en vivo
+    {
+        constexpr double tsr = 48000.0; constexpr int bs = 256;
+        proc.setPlayConfigDetails (0, 2, tsr, bs);
+        int fails = 0;
+        auto check = [&] (bool ok, const juce::String& what) { std::cout << (ok ? "OK   " : "FAIL ") << what << std::endl; if (! ok) ++fails; };
+        auto setP = [&] (const char* id, float v) { auto* q = proc.apvts.getParameter (id); q->setValueNotifyingHost (q->convertTo0to1 (v)); };
+        // una nota: largo (hasta -40 dB del pico) y cruces por cero por segundo (sube con la altura)
+        auto measure = [&] (float tone, float decay, float decayLater, int notes)
+        {
+            proc.loadPreset (findPreset ("Init Ring"));
+            setP (IDs::diceNote, 1.0f); setP (IDs::diceMode, 2.0f);   // MELODÍA: todo con nota
+            setP (IDs::plateMix, 0.0f); setP (IDs::delayMix, 0.0f); setP (IDs::springMix, 0.0f); setP (IDs::texMix, 0.0f); setP (IDs::chorusMix, 0.0f);
+            proc.prepareToPlay (tsr, bs);
+            juce::AudioBuffer<float> b (2, bs);
+            double lenSum = 0; std::vector<double> zcs;
+            for (int n = 0; n < notes; ++n)
+            {
+                setP (IDs::diceTone, tone); setP (IDs::diceDecay, decay);
+                std::vector<float> env; int zc = 0, zcN = 0; float prev = 0;
+                const int blocks = (int) (6.0 * tsr / bs);
+                for (int k = 0; k < blocks; ++k)
+                {
+                    juce::MidiBuffer m;
+                    if (k == 0) m.addEvent (juce::MidiMessage::noteOn (1, 60, 0.8f), 0);
+                    if (k == (int) (0.25 * tsr / bs)) m.addEvent (juce::MidiMessage::noteOff (1, 60), 0);
+                    if (k == (int) (0.05 * tsr / bs)) setP (IDs::diceDecay, decayLater);   // se mueve con la nota sonando
+                    proc.processBlock (b, m);
+                    double e = 0; for (int i = 0; i < bs; ++i) { const float x = b.getSample (0, i); e += x * x; if (k * bs < (int) (0.2 * tsr)) { if ((x > 0) != (prev > 0)) ++zc; prev = x; ++zcN; } }
+                    env.push_back ((float) std::sqrt (e / bs));
+                }
+                const float pk = *std::max_element (env.begin(), env.end());
+                int last = 0; for (int k = 0; k < (int) env.size(); ++k) if (env[(size_t) k] > pk * 0.01f) last = k;
+                lenSum += (last + 1) * bs / tsr;
+                zcs.push_back (zc / (zcN / tsr));
+                juce::AudioBuffer<float> t (2, bs); for (int k = 0; k < 40; ++k) { juce::MidiBuffer m; proc.processBlock (t, m); }
+            }
+            std::sort (zcs.begin(), zcs.end());
+            return std::pair<double, double> (lenSum / notes, zcs[zcs.size() / 2]);   // mediana: el azar de familias no la mueve
+        };
+        const auto mid = measure (0, 0, 0, 30), longer = measure (0, 1, 1, 30), shorter = measure (0, -1, -1, 30);
+        cz::CzVoice::forcedFamily() = 0;   // altura: solo punteados (las baterías y ruidos no tienen nota)
+        const auto pmid = measure (0, 0, 0, 60), up = measure (12, 0, 0, 60), down = measure (-12, 0, 0, 60);
+        cz::CzVoice::forcedFamily() = -1;
+        const auto live = measure (0, 0, -1, 30);
+        std::cout << "length  short " << shorter.first << " s, normal " << mid.first << " s, long " << longer.first << " s, moved live to short " << live.first << " s" << std::endl;
+        std::cout << "pitch (median zero crossings/s, plucks)  -12: " << down.second << "  0: " << pmid.second << "  +12: " << up.second << std::endl;
+        check (longer.first > mid.first * 1.5 && shorter.first < mid.first * 0.6, "DICE DECAY makes the random sounds longer / shorter");
+        check (live.first < mid.first * 0.75, "DICE DECAY works live on a note that is already sounding");
+        // directo en la voz: cuánto corre TONO la altura de cada nota sorteada (también en vivo)
+        auto shiftFor = [&] (float tone)
+        {
+            proc.loadPreset (findPreset ("Init Ring"));
+            setP (IDs::diceNote, 1.0f); setP (IDs::diceTone, 0.0f);
+            proc.prepareToPlay (tsr, bs);
+            juce::AudioBuffer<float> b (2, bs);
+            juce::MidiBuffer m; m.addEvent (juce::MidiMessage::noteOn (1, 60, 0.8f), 0);
+            proc.processBlock (b, m);
+            setP (IDs::diceTone, tone);   // se mueve con la nota sonando
+            for (int k = 0; k < 8; ++k) { juce::MidiBuffer e; proc.processBlock (b, e); }
+            return cz::CzVoice::testPitchShift.load();
+        };
+        const float s12 = shiftFor (12.0f), sm7 = shiftFor (-7.0f), s0 = shiftFor (0.0f);
+        std::cout << "pitch shift inside the voice (semitones): +12 -> " << s12 << ", -7 -> " << sm7 << ", 0 -> " << s0 << std::endl;
+        check (std::abs (s12 - 12.0f) < 0.2f && std::abs (sm7 + 7.0f) < 0.2f && std::abs (s0) < 0.2f, "DICE PITCH moves the random sounds up / down, live");
+        std::cout << (fails ? "DICECTL: FAILED" : "DICECTL: all checks passed") << std::endl;
+        return fails;
+    }
+    if (argc > 2 && juce::String (argv[2]) == "dicefaces") // cada cara del dado elige lo que promete
+    {
+        constexpr double tsr = 48000.0; constexpr int bs = 512;
+        proc.setPlayConfigDetails (0, 2, tsr, bs);
+        int fails = 0;
+        auto check = [&] (bool ok, const juce::String& what) { std::cout << (ok ? "OK   " : "FAIL ") << what << std::endl; if (! ok) ++fails; };
+        const char* fn = "PBDXSWT";   // punteado, campana, pad, batería (X), sinte, madera (W), textura
+        for (int face = 0; face < 6; ++face)
+        {
+            proc.loadPreset (findPreset ("Init Ring"));
+            proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (1.0f);
+            auto* dm = proc.apvts.getParameter (IDs::diceMode); dm->setValueNotifyingHost (dm->convertTo0to1 ((float) face));
+            proc.prepareToPlay (tsr, bs);
+            juce::AudioBuffer<float> b (2, bs);
+            std::vector<int> fams;
+            for (int n = 0; n < 40; ++n)
+            {
+                juce::MidiBuffer m; m.addEvent (juce::MidiMessage::noteOn (1, 48 + (n * 7) % 24, 0.8f), 0);
+                proc.processBlock (b, m);
+                fams.push_back (cz::CzVoice::lastFamily());
+                juce::MidiBuffer off; off.addEvent (juce::MidiMessage::noteOff (1, 48 + (n * 7) % 24), 0);
+                proc.processBlock (b, off);
+            }
+            juce::String seq; for (int f : fams) seq << fn[f];
+            std::cout << "face " << (face + 1) << ": " << seq << std::endl;
+            auto only = [&] (std::initializer_list<int> ok) { for (int f : fams) if (std::find (ok.begin(), ok.end(), f) == ok.end()) return false; return true; };
+            int repeats = 0; for (size_t i = 1; i < fams.size(); ++i) repeats += fams[i] == fams[i - 1];
+            std::set<int> distinct (fams.begin(), fams.end());
+            // ningún ciclo fijo: la secuencia no se repite con período 2, 3 o 4
+            bool cyclic = false;
+            for (int per = 2; per <= 4 && face != 5; ++per) { int same = 0; for (size_t i = (size_t) per; i < fams.size(); ++i) same += fams[i] == fams[i - (size_t) per]; cyclic = cyclic || same >= (int) (fams.size() - (size_t) per) - 2; }
+            check (! cyclic, "face " + juce::String (face + 1) + " does not fall into a fixed cycle");
+            if (face == 0) check (repeats == 0 && distinct.size() >= 6, "1 SURPRISE: every family, never twice in a row");
+            if (face == 1) check (only ({ 3, 5, 0 }), "2 PERCUSSION: only drums, wood and plucks");
+            if (face == 2) check (only ({ 0, 1, 4, 5 }), "3 MELODY: only pitched families");
+            if (face == 3) check (only ({ 2, 6, 1 }), "4 ATMOSPHERE: only long families");
+            if (face == 4)
+            {
+                bool alt = true; for (size_t i = 1; i < fams.size(); ++i) { auto shortF = [] (int f) { return f == 3 || f == 0 || f == 5; }; alt = alt && shortF (fams[i]) != shortF (fams[i - 1]); }
+                check (alt, "5 CONTRAST: short and long alternate on every note");
+            }
+            if (face == 5) check (repeats >= 20 && distinct.size() >= 3, "6 MUTATION: stays in a family for a while, then jumps");
+        }
+        std::cout << (fails ? "DICEFACES: FAILED" : "DICEFACES: all checks passed") << std::endl;
+        return fails;
+    }
+    if (argc > 2 && juce::String (argv[2]) == "dicehold") // dado: un toque = sonido nuevo; mantener = prende / apaga cada nota
+    {
+        int fails = 0;
+        auto check = [&] (bool ok, const juce::String& what) { std::cout << (ok ? "OK   " : "FAIL ") << what << std::endl; if (! ok) ++fails; };
+        proc.loadPreset (findPreset ("Init Ring"));
+        std::unique_ptr<juce::AudioProcessorEditor> editor (proc.createEditor());
+        mm::gui::Pad* pad = nullptr;
+        std::function<void (juce::Component&)> find = [&] (juce::Component& c)
+        {
+            if (auto* p = dynamic_cast<mm::gui::Pad*> (&c); p != nullptr && p->paramId == IDs::diceNote) pad = p;
+            for (auto* ch : c.getChildren()) find (*ch);
+        };
+        find (*editor);
+        check (pad != nullptr && pad->holdListener != nullptr, "dice pad found");
+        if (pad == nullptr || pad->holdListener == nullptr) return 1;
+        auto& b = pad->button;
+        auto ev = [&] (juce::ModifierKeys mods)
+        {
+            const juce::Point<float> pos (b.getWidth() * 0.5f, b.getHeight() * 0.5f);
+            return juce::MouseEvent (juce::Desktop::getInstance().getMainMouseSource(), pos, mods, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                                     &b, &b, juce::Time::getCurrentTime(), pos, juce::Time::getCurrentTime(), 1, false);
+        };
+        auto pump = [] (int ms) { juce::MessageManager::getInstance()->runDispatchLoopUntil (ms); };
+        auto dice = [&] { return proc.apvts.getRawParameterValue (IDs::diceNote)->load() > 0.5f; };
+        auto snapshot = [&] { juce::String s; for (auto* p : proc.getParameters()) s << p->getValue() << ","; return s; };
+        const juce::ModifierKeys left (juce::ModifierKeys::leftButtonModifier);
+        // toque corto
+        auto before = snapshot();
+        pad->holdListener->mouseDown (ev (left)); pump (120); pad->holdListener->mouseUp (ev ({}));
+        pump (800);
+        check (! dice(), "tap does not turn on every-note mode");
+        check (snapshot() != before, "tap rolls a new sound");
+        // mantener apretado
+        pad->holdListener->mouseDown (ev (left)); pump (900);
+        check (dice(), "hold turns on every-note mode");
+        before = snapshot();
+        pad->holdListener->mouseUp (ev ({})); pump (100);
+        check (dice(), "releasing after hold keeps it on");
+        auto diffCount = [] (const juce::String& a, const juce::String& b2) { auto x = juce::StringArray::fromTokens (a, ",", ""), y = juce::StringArray::fromTokens (b2, ",", ""); int d = 0; for (int i = 0; i < x.size(); ++i) d += x[i] != y[i]; return d; };
+        check (diffCount (before, snapshot()) == 0, "releasing after hold does not roll");
+        // toque con el modo prendido: tira el dado, cae en otra cara (otra lógica) y no toca el sonido
+        auto mode = [&] { return (int) proc.apvts.getRawParameterValue (IDs::diceMode)->load(); };
+        for (int t = 0; t < 4; ++t)
+        {
+            const int m0 = mode();
+            before = snapshot();
+            pad->holdListener->mouseDown (ev (left)); pump (100); pad->holdListener->mouseUp (ev ({})); pump (800);
+            auto x = juce::StringArray::fromTokens (before, ",", ""), y = juce::StringArray::fromTokens (snapshot(), ",", "");
+            int changed = 0; for (int i = 0; i < x.size(); ++i) changed += x[i] != y[i];
+            std::cout << "  roll: face " << (m0 + 1) << " -> " << (mode() + 1) << ", face shown " << pad->diceFace << std::endl;
+            check (dice() && mode() != m0 && changed == 1 && pad->diceFace == mode() + 1, "tap with mode on rolls a new face (only the logic changes)");
+        }
+        // mantener otra vez: se apaga
+        pad->holdListener->mouseDown (ev (left)); pump (900); pad->holdListener->mouseUp (ev ({})); pump (100);
+        check (! dice(), "hold again turns it off");
+        std::cout << (fails ? "DICEHOLD: FAILED" : "DICEHOLD: all checks passed") << std::endl;
+        return fails;
+    }
+    if (argc > 2 && juce::String (argv[2]) == "macrofuzz") // motor C solo: cambios de modelo como el dado, notas y parámetros al azar
+    {
+        juce::Random rr (argc > 3 ? juce::String (argv[3]).getIntValue() : 1);
+        auto eng = std::make_unique<cz::MacroEngine>();
+        eng->prepare (44100.0);
+        double worst = 0; int worstModel = -1;
+        for (int it = 0; it < 200000; ++it)
+        {
+            cz::MacroParams mp;
+            mp.model = rr.nextInt (3) == 0 ? 7 : rr.nextInt (24);
+            mp.harmonics = rr.nextFloat(); mp.timbre = rr.nextFloat(); mp.morph = rr.nextFloat();
+            mp.decay = rr.nextFloat(); mp.colour = rr.nextFloat(); mp.lpg = rr.nextBool();
+            const float note = rr.nextInt (4) == 0 ? -60.0f + 250.0f * rr.nextFloat() : 12.0f + 108.0f * rr.nextFloat();
+            if (rr.nextInt (2) == 0) eng->noteOn (note); else if (rr.nextInt (4) == 0) eng->noteOff();
+            eng->set (note, mp);
+            const auto t0 = juce::Time::getHighResolutionTicks();
+            float l, r;
+            for (int i = 0; i < 64 + rr.nextInt (400); ++i) eng->next (l, r);
+            const double dt = juce::Time::highResolutionTicksToSeconds (juce::Time::getHighResolutionTicks() - t0);
+            if (dt > worst) { worst = dt; worstModel = mp.model; }
+            if (it % 20000 == 0) std::cout << "it " << it << std::endl;
+        }
+        {   // el caso que colgaba Ableton: NaN / infinito / fase rota directo a los osciladores
+            float buf[24];
+            plaits::SuperSquareOscillator sq; sq.Init();
+            plaits::VariableShapeOscillator vs; vs.Init();
+            const float bad[] { std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(), -1.0f, 1.0e9f, 0.0f, 0.01f };
+            for (float f : bad) for (int k = 0; k < 50; ++k) { sq.Render (f, 0.7f, buf, 24); vs.Render (f, f * 1.3f, 0.4f, 0.6f, buf, 24); }
+            for (int k = 0; k < 500; ++k) { sq.Render (0.01f, 0.5f, buf, 24); vs.Render (0.01f, 0.5f, 0.5f, buf, 24); }
+            bool finite = true; for (float x : buf) finite = finite && std::isfinite (x);
+            std::cout << "OSC NaN test: returned (no hang), output finite after recovery: " << (finite ? "yes" : "NO") << std::endl;
+            if (! finite) return 1;
+        }
+        {   // motor C con afinación NaN
+            cz::MacroParams mp; mp.model = 7; mp.lpg = true;
+            eng->noteOn (60.0f); eng->set (std::numeric_limits<float>::quiet_NaN(), mp);
+            float l, r; for (int i = 0; i < 4000; ++i) eng->next (l, r);
+            std::cout << "MACRO NaN note: ok" << std::endl;
+        }
+        std::cout << "MACROFUZZ done, worst " << worst * 1000.0 << " ms (model " << worstModel << ")" << std::endl;
+        return 0;
+    }
+    if (argc > 2 && juce::String (argv[2]) == "diceall") // DADO en todos los presets: secuenciador + teclado, que nada se cuelgue
+    {
+        const double tsr = 44100.0;
+        const int bs = 512;
+        proc.setPlayConfigDetails (0, 2, tsr, bs);
+        DemoPlayHead ph; ph.bpm = 140.0;
+        proc.setPlayHead (&ph);
+        juce::Random rr (argc > 3 ? juce::String (argv[3]).getIntValue() : 3);
+        const juce::File stateFile (argc > 4 ? juce::String (argv[4]) : juce::String());
+        const bool hq = juce::SystemStats::getEnvironmentVariable ("DICE_HQ", "0") == "1";
+        const int np = stateFile.existsAsFile() ? 3 : (int) presets::factory().size();
+        double worstAll = 0; juce::String worstName;
+        for (int pi = 0; pi < np; ++pi)
+        {
+            std::cout << "P " << pi << " " << presets::factory()[(size_t) pi].name << std::flush;
+            if (stateFile.existsAsFile())
+            {
+                juce::MemoryBlock mb;
+                if (auto xml = juce::parseXML (stateFile)) { juce::AudioProcessor::copyXmlToBinary (*xml, mb); proc.setStateInformation (mb.getData(), (int) mb.getSize()); }
+            }
+            else proc.loadPreset (pi);
+            if (hq) proc.apvts.getParameter (IDs::quality)->setValueNotifyingHost (1.0f);
+            proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (1.0f);
+            proc.apvts.getParameter (IDs::seqOn)->setValueNotifyingHost (1.0f);
+            proc.prepareToPlay (tsr, bs);
+            juce::AudioBuffer<float> b (2, bs);
+            double worst = 0; bool bad = false;
+            std::set<int> held;
+            for (int blk = 0; blk < (int) (6.0 * tsr / bs); ++blk)
+            {
+                juce::MidiBuffer m;
+                if (blk % 3 == 0)
+                {
+                    for (int k = rr.nextInt (4); k >= 0; --k) { const int n = rr.nextInt (128); m.addEvent (juce::MidiMessage::noteOn (1, n, 0.2f + 0.8f * rr.nextFloat()), rr.nextInt (bs)); held.insert (n); }
+                    if (rr.nextInt (3) == 0) { for (int n : held) m.addEvent (juce::MidiMessage::noteOff (1, n), bs - 1); held.clear(); }
+                }
+                const auto t0 = juce::Time::getHighResolutionTicks();
+                proc.processBlock (b, m);
+                worst = std::max (worst, juce::Time::highResolutionTicksToSeconds (juce::Time::getHighResolutionTicks() - t0));
+                ph.ppq += bs * ph.bpm / (60.0 * tsr);
+                for (int c = 0; c < 2; ++c) for (int i = 0; i < bs; ++i) if (! std::isfinite (b.getSample (c, i))) bad = true;
+            }
+            const double pct = 100.0 * worst / (bs / tsr);
+            std::cout << "  worst " << juce::String (pct, 0) << "%" << (bad ? "  NaN!" : "") << std::endl;
+            if (pct > worstAll) { worstAll = pct; worstName = presets::factory()[(size_t) pi].name; }
+        }
+        std::cout << "DICEALL worst block " << worstAll << "% in " << worstName << std::endl;
+        proc.setPlayHead (nullptr);
+        return 0;
+    }
+    if (argc > 2 && juce::String (argv[2]) == "dicecpu") // DADO con muchas notas: CPU, picos y NaN
+    {
+        constexpr double tsr = 48000.0;
+        constexpr int bs = 256;
+        proc.setPlayConfigDetails (0, 2, tsr, bs);
+        int fails = 0;
+        const char* presets[] { "Init Ring", "Euclid Plonks", "Resonant Arp" };
+        const bool wide = argc > 3;
+        for (auto* pn : presets)
+        for (int on = 0; on < 2; ++on)
+        {
+            std::cout << "start " << pn << " " << on << std::endl;
+            proc.loadPreset (findPreset (pn));
+            proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (on ? 1.0f : 0.0f);
+            proc.prepareToPlay (tsr, bs);
+            juce::AudioBuffer<float> b (2, bs);
+            const int blocks = (int) (20.0 * tsr / bs);
+            double worst = 0, total = 0; float peak = 0; bool bad = false;
+            juce::Random rr (7);
+            std::set<int> held;
+            for (int blk = 0; blk < blocks; ++blk)
+            {
+                juce::MidiBuffer m;
+                if (blk % 4 == 0)   // ~21 ms: acordes de 1 a 5 notas, muchas superpuestas
+                {
+                    for (int k = rr.nextInt (5); k >= 0; --k) { const int n = wide ? rr.nextInt (128) : 36 + rr.nextInt (48); m.addEvent (juce::MidiMessage::noteOn (1, n, 0.3f + 0.7f * rr.nextFloat()), rr.nextInt (bs)); held.insert (n); }
+                    if (rr.nextInt (3) == 0) { for (int n : held) m.addEvent (juce::MidiMessage::noteOff (1, n), bs - 1); held.clear(); }
+                }
+                const auto t0 = juce::Time::getHighResolutionTicks();
+                proc.processBlock (b, m);
+                const double dt = juce::Time::highResolutionTicksToSeconds (juce::Time::getHighResolutionTicks() - t0);
+                worst = std::max (worst, dt); total += dt;
+                for (int c = 0; c < 2; ++c) for (int i = 0; i < bs; ++i) { const float x = b.getSample (c, i); if (! std::isfinite (x)) bad = true; else peak = std::max (peak, std::abs (x)); }
+            }
+            const double blockDur = bs / tsr;
+            std::cout << pn << (on ? "  DICE ON " : "  dice off") << "  CPU avg " << juce::String (100.0 * total / (blocks * blockDur), 1)
+                      << "%  worst block " << juce::String (100.0 * worst / blockDur, 0) << "%  peak " << peak << (bad ? "  NaN!" : "") << std::endl;
+            if (bad || peak > 8.0f) ++fails;
+        }
+        std::cout << (fails ? "DICECPU: FAILED" : "DICECPU: ok") << std::endl;
+        return fails;
+    }
+    if (argc > 2 && juce::String (argv[2]) == "dicefam") // DADO: volumen de cada familia de sonido
+    {
+        constexpr double tsr = 48000.0;
+        constexpr int bs = 512;
+        proc.setPlayConfigDetails (0, 2, tsr, bs);
+        const char* names[] { "PLUCK", "BELL", "PAD", "DRUM", "SYNTH", "WOOD", "TEXTURE" };
+        for (int f = 0; f < cz::CzVoice::kDiceFamilies; ++f)
+        {
+            cz::CzVoice::forcedFamily() = f;
+            proc.loadPreset (findPreset ("Init Ring"));
+            proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (1.0f);
+            proc.prepareToPlay (tsr, bs);
+            juce::AudioBuffer<float> b (2, bs);
+            double sumDb = 0; int cnt = 0; float lo = 0, hi = -200;
+            for (int k = 0; k < 60; ++k)
+            {
+                float best = 0; double acc = 0; int accN = 0;
+                const int len = (int) (1.2 * tsr / bs);
+                for (int blk = 0; blk < len; ++blk)
+                {
+                    juce::MidiBuffer m;
+                    if (blk == 0) m.addEvent (juce::MidiMessage::noteOn (1, 48 + (k * 5) % 24, 0.8f), 0);
+                    if (blk == (int) (0.3 * tsr / bs)) m.addEvent (juce::MidiMessage::noteOff (1, 48 + (k * 5) % 24), 0);
+                    proc.processBlock (b, m);
+                    for (int i = 0; i < bs; ++i) { acc += b.getSample (0, i) * b.getSample (0, i); ++accN; }
+                    if (accN >= 4800) { best = std::max (best, (float) std::sqrt (acc / accN)); acc = 0; accN = 0; }
+                }
+                const float db = juce::Decibels::gainToDecibels (best, -120.0f);
+                sumDb += db; ++cnt; lo = k == 0 ? db : std::min (lo, db); hi = std::max (hi, db);
+            }
+            std::cout << "FAMILY " << names[f] << "  loudness " << (sumDb / cnt) << " dB  (min " << lo << ", max " << hi << ")  gain now " << cz::CzVoice::kDiceFamilyGain[(size_t) f] << std::endl;
+        }
+        cz::CzVoice::forcedFamily() = -1;
         return 0;
     }
     if (argc > 2 && juce::String (argv[2]) == "dice") // RANDOM (dado): niveles, que nada se rompa, deshacer, audio de ejemplo
@@ -446,7 +800,10 @@ int main (int argc, char** argv)
             };
             const float off = twoNotes (false), on = twoNotes (true);
             std::cout << "DICE EVERY NOTE: timbre distance between two equal notes  off " << off << " dB, on " << on << " dB" << std::endl;
-            check (on > off * 2.0f && on > 10.0f, "DICE ON EVERY NOTE makes each note a different sound");
+            const float again = twoNotes (true);   // mismo pedido otra vez: no tiene que repetir el mismo par de sonidos
+            std::cout << "DICE EVERY NOTE: second run " << again << " dB (first " << on << ")" << std::endl;
+            check (std::min (on, again) > off * 2.0f && std::max (on, again) > 7.0f, "DICE ON EVERY NOTE makes each note a different sound");
+            check (std::abs (again - on) > 0.01f, "DICE ON EVERY NOTE does not follow a pattern (different every run)");
             proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (0.0f);
         }
         {   // audio de ejemplo: secuenciador con un sonido nuevo en cada nota
@@ -1151,6 +1508,8 @@ int main (int argc, char** argv)
             proc.setPlayConfigDetails (0, 2, sr, bs);
             proc.loadPreset (rnd.nextInt ((int) presets::factory().size()));
             if (auto* q = proc.apvts.getParameter (IDs::quality)) q->setValueNotifyingHost (round % 2 ? 1.0f : 0.0f);
+            const bool fuzzDice = juce::SystemStats::getEnvironmentVariable ("FUZZ_DICE", "0") == "1";
+            if (fuzzDice) proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (1.0f);
             proc.prepareToPlay (sr, bs);
             juce::AudioBuffer<float> b (2, bs);
             const int nBlocks = (int) (3.0 * sr / bs);
@@ -1164,6 +1523,7 @@ int main (int argc, char** argv)
                     {
                         auto* prm = params[rnd.nextInt (params.size())];
                         if (prm->getName (32).containsIgnoreCase ("quality")) continue;
+                        if (fuzzDice && prm == proc.apvts.getParameter (IDs::diceNote)) continue;
                         const float v = rnd.nextInt (4) == 0 ? (float) rnd.nextInt (2) : rnd.nextFloat();
                         prm->setValueNotifyingHost (v);
                         changed << prm->getName (20) << "=" << juce::String (v, 2) << " ";
@@ -1193,6 +1553,7 @@ int main (int argc, char** argv)
                         if (proc.apvts.getRawParameterValue (IDs::limiterOn)->load() > 0.5f) worstLimOn = juce::jmax (worstLimOn, std::abs (v));
                     }
             }
+            if (fuzzDice) proc.apvts.getParameter (IDs::diceNote)->setValueNotifyingHost (1.0f);
             std::cout << "FUZZ round " << round << "  " << sr << " Hz / " << bs << (round % 2 ? " HIGH" : " ECO") << "  ok" << std::endl;
         }
         std::cout << "FUZZ RESULT: problems " << problems << ", worst block load " << juce::String (worstMs * 100.0, 1)

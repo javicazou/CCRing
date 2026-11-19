@@ -1,4 +1,4 @@
-CCRing @VERSION@ — CCR
+CCRing — CCR
 Free and open-source physical-modelling synth.
 For: @ARCH_EN@, macOS 11 or later.
 

@@ -173,6 +173,54 @@ public:
         auto r = getLocalBounds();
         label.setBounds (r.removeFromBottom (16));
         button.setBounds (r.withSizeKeepingCentre (juce::jmin (r.getWidth(), 64), 30));
+        if (dice != nullptr) dice->setBounds (button.getBounds());
+    }
+
+    float diceHold = 0.0f;   // 0..1 mientras se mantiene apretado el dado
+    int diceFace = 1;        // cara que se ve (1..6)
+    juce::MouseListener* holdListener = nullptr;   // (pruebas) el que maneja toque / mantener
+    void repaintDice() { repaint(); if (dice != nullptr) dice->repaint(); }
+
+    // Botón con un dado dibujado en vez de texto (SORTEAR)
+    void showDice()
+    {
+        struct DiceFace : juce::Component
+        {
+            juce::Button* b = nullptr;
+            void paint (juce::Graphics& g) override
+            {
+                using namespace juce;
+                const bool on = b->getToggleState();
+                const auto c = getLocalBounds().toFloat().getCentre();
+                // mantener apretado: una barra se llena abajo hasta que cambia el modo
+                if (auto* pd = dynamic_cast<Pad*> (getParentComponent()); pd != nullptr && pd->diceHold > 0.0f)
+                {
+                    auto bar = getLocalBounds().toFloat().reduced (4.0f, 0.0f).removeFromBottom (3.0f).translated (0.0f, -2.0f);
+                    g.setColour ((on ? Colour (0xff1a1b1e) : Palette::accent).withAlpha (0.9f));
+                    g.fillRoundedRectangle (bar.withWidth (bar.getWidth() * pd->diceHold), 1.5f);
+                }
+                const float s = jmin (20.0f, (float) getHeight() - 8.0f);
+                const auto d = Rectangle<float> (s, s).withCentre (c);
+                g.setColour (on ? Colour (0xff1a1b1e) : Palette::text.withAlpha (b->isOver() ? 1.0f : 0.8f));
+                g.drawRoundedRectangle (d, s * 0.22f, 1.7f);
+                const float o = s * 0.26f, rr = s * 0.095f;
+                const int face = [this] { auto* pd = dynamic_cast<Pad*> (getParentComponent()); return pd != nullptr ? juce::jlimit (1, 6, pd->diceFace) : 5; }();
+                std::vector<Point<float>> pips;
+                if (face % 2 == 1) pips.push_back ({ 0, 0 });
+                if (face >= 2) { pips.push_back ({ -o, -o }); pips.push_back ({ o, o }); }
+                if (face >= 4) { pips.push_back ({ o, -o }); pips.push_back ({ -o, o }); }
+                if (face == 6) { pips.push_back ({ -o, 0 }); pips.push_back ({ o, 0 }); }
+                for (auto p : pips)
+                    g.fillEllipse (c.x + p.x - rr, c.y + p.y - rr, rr * 2.0f, rr * 2.0f);
+            }
+        };
+        auto f = std::make_unique<DiceFace>();
+        f->b = &button;
+        f->setInterceptsMouseClicks (false, false);
+        addAndMakeVisible (*f);
+        button.onStateChange = [d = f.get()] { d->repaint(); };
+        dice = std::move (f);
+        resized();
     }
 
     const juce::String paramId;
@@ -188,6 +236,7 @@ public:
 private:
     juce::String buttonText, titleText;
     std::unique_ptr<APVTS::ButtonAttachment> attachment;
+    std::unique_ptr<juce::Component> dice;
 };
 
 // Display LCD de 2 líneas

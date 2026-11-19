@@ -136,6 +136,11 @@ private:
     void rollDice (URingAudioProcessor::RandomScope scope, bool vary);
     juce::TextButton* rollButton = nullptr;   // NUEVO SONIDO (módulo AZAR de la pestaña SEQ)
     void showDiceMenu();
+    void toggleDiceEveryNote();
+    void landDice (int face);
+    int diceModeIndex() const;
+    mm::gui::Pad* dicePad = nullptr;
+    std::unique_ptr<juce::MouseListener> diceHold;   // mantener apretado el dado
     void setCableView (int view, bool announce);
     int previewNote = -1, previewId = 0;
     float ledFlash = 0.0f;   // LED del logo (titila al tempo)

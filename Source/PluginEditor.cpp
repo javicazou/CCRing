@@ -56,8 +56,6 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
         g.setColour (Palette::dim.withAlpha (0.8f));
         g.setFont (uiFont (7.5f).withExtraKerningFactor (0.3f));
         g.drawText ("CCR", 41, 34, 130, 12, juce::Justification::centredLeft);
-        g.setColour (Palette::accent.withAlpha (0.8f));
-        g.drawText (juce::String ("v") + URING_VERSION, 64, 34, 40, 12, juce::Justification::centredLeft);
     };
     addAndMakeVisible (canvas);
     for (auto* c : std::initializer_list<juce::Component*> { &synthPage, &fxPage, &seqPage, &livePage, &macroPage, &texturePage, &lcd, &keyboard,
@@ -273,26 +271,68 @@ URingAudioProcessorEditor::URingAudioProcessorEditor (URingAudioProcessor& p)
         addChoice (qp, rn, IDs::seqRndRate, "RATE");
         addKnob   (qp, rn, IDs::seqRndTime, "TIME");
         addKnob   (qp, rn, IDs::seqLongShort, "LONG / SHORT");
-        {   // NUEVO SONIDO: un sonido al azar para todo (clic derecho: qué sortear o variar)
-            struct RollButton : juce::TextButton
+        // SORTEAR (dado): prendido, cada nota (del secuenciador o tocada) sale con otro sonido al azar
+        addPad    (qp, rn, IDs::diceNote, "", "ROLL");
+        if (auto* pd = dynamic_cast<mm::gui::Pad*> (controls.back().get()))
+        {
+            pd->showDice();
+            // Un toque: sonido nuevo. Mantener apretado ~0,6 s: prende / apaga "cada nota es otro sonido".
+            // Clic derecho: menú (qué sortear o una variación chica).
+            pd->button.setClickingTogglesState (false);
+            pd->button.setTriggeredOnMouseDown (false);
+            pd->button.onClick = nullptr;
+            pd->button.setTooltip (mm::lang::tr ("Dice: click = roll (with EVERY NOTE on, each face is another way of choosing the sounds; off, a new sound). Hold = every note a different sound on / off. Right-click: menu"));
+            struct DiceHold : juce::MouseListener, juce::Timer
             {
-                std::function<void()> onMenu;
-                void mouseDown (const juce::MouseEvent& e) override { if (e.mods.isPopupMenu()) { if (onMenu) onMenu(); return; } juce::TextButton::mouseDown (e); }
+                URingAudioProcessorEditor& ed; mm::gui::Pad& pad; bool fired = false, down = false; juce::uint32 t0 = 0;
+                int rolling = 0, target = 0; juce::Random rnd;
+                DiceHold (URingAudioProcessorEditor& e, mm::gui::Pad& p) : ed (e), pad (p) {}
+                void mouseDown (const juce::MouseEvent& e) override
+                {
+                    if (e.mods.isPopupMenu()) { ed.showDiceMenu(); return; }
+                    down = true; fired = false; rolling = 0; t0 = juce::Time::getMillisecondCounter();
+                    startTimerHz (30);
+                }
+                void mouseUp (const juce::MouseEvent& e) override
+                {
+                    if (! down) return;
+                    down = false; stopTimer(); pad.diceHold = 0.0f; pad.repaintDice();
+                    if (fired || e.mods.isPopupMenu() || ! pad.button.getLocalBounds().contains (e.getEventRelativeTo (&pad.button).getPosition()))
+                        return;
+                    // un toque: tirar el dado (gira unos cuadros y cae en una cara)
+                    const int now = ed.diceModeIndex();
+                    target = rnd.nextInt (5); if (target >= now) ++target;   // siempre otra cara
+                    rolling = 9;
+                    startTimer (45);
+                }
+                void timerCallback() override
+                {
+                    if (rolling > 0)
+                    {
+                        if (--rolling > 0) { pad.diceFace = 1 + rnd.nextInt (6); pad.repaintDice(); return; }
+                        stopTimer();
+                        ed.landDice (target);
+                        return;
+                    }
+                    const float k = (float) (juce::Time::getMillisecondCounter() - t0) / 600.0f;
+                    pad.diceHold = juce::jmin (1.0f, k); pad.repaintDice();
+                    if (k >= 1.0f && ! fired)
+                    {
+                        fired = true; stopTimer(); pad.diceHold = 0.0f; pad.repaintDice();
+                        ed.toggleDiceEveryNote();
+                    }
+                }
             };
-            auto b = std::make_unique<RollButton>();
-            b->setName ("ROLL");
-            b->setButtonText (mm::lang::tr ("ROLL"));
-            b->setColour (juce::TextButton::textColourOffId, juce::Colour (0xff7fb2ff));
-            b->setTooltip (mm::lang::tr ("A new random sound for everything. Right-click: what to randomize, or a small variation"));
-            b->onClick = [this] { rollDice (URingAudioProcessor::RandAll, false); };
-            b->onMenu = [this] { showDiceMenu(); };
-            rollButton = b.get();
-            qp.addAndMakeVisible (*b);
-            rn.items.push_back (b.get());
-            controls.push_back (std::move (b));
+            diceHold = std::make_unique<DiceHold> (*this, *pd);
+            pd->button.addMouseListener (diceHold.get(), false);
+            pd->holdListener = diceHold.get();
+            dicePad = pd;
+            pd->diceFace = diceModeIndex() + 1;
+            rollButton = &pd->button;
         }
-        // DADO: prendido, cada nota (del secuenciador o tocada) sale con otro sonido
-        addPad    (qp, rn, IDs::diceNote, "DICE", "EVERY NOTE");
+        // TONO y CAÍDA del dado (columna al lado del dado; automatizables y se graban con REC)
+        addKnob   (qp, rn, IDs::diceTone, "DICE PITCH");
+        addKnob   (qp, rn, IDs::diceDecay, "DICE DECAY");
         // MARBLES (Mutable Instruments): las notas salen de un bucle aleatorio con memoria
         Section mb { "MARBLES" };
         mb.tag = juce::Colour (0xff8fe3c8);
@@ -722,6 +762,8 @@ void URingAudioProcessorEditor::retranslateUi()
 
 void URingAudioProcessorEditor::timerCallback()
 {
+    if (dicePad != nullptr && dicePad->diceHold == 0.0f && dicePad->diceFace != diceModeIndex() + 1 && ! dicePad->button.isMouseButtonDown())
+        if (auto* dh = dynamic_cast<juce::Timer*> (diceHold.get()); dh == nullptr || ! dh->isTimerRunning()) { dicePad->diceFace = diceModeIndex() + 1; dicePad->repaintDice(); }
     if (mm::lang::version().load() != seenLanguage) retranslateUi();
 
     if (const auto learned = proc.popLearnEvent(); learned.isNotEmpty())
@@ -1405,6 +1447,37 @@ void URingAudioProcessorEditor::rollDice (URingAudioProcessor::RandomScope scope
     canvas.repaint();
 }
 
+int URingAudioProcessorEditor::diceModeIndex() const
+{
+    return juce::jlimit (0, 5, (int) proc.apvts.getRawParameterValue (IDs::diceMode)->load());
+}
+
+// El dado cayó en una cara: con CADA NOTA prendido cambia la lógica; apagado, sortea un sonido nuevo
+void URingAudioProcessorEditor::landDice (int face)
+{
+    static const char* names[] { "SURPRISE", "PERCUSSION", "MELODY", "ATMOSPHERE", "CONTRAST", "MUTATION" };
+    static const char* what[] { "ANYTHING GOES", "SHORT HITS", "ONLY WITH PITCH", "LONG AND SLOW", "SHORT, LONG, SHORT...", "SLOWLY EVOLVING" };
+    face = juce::jlimit (0, 5, face);
+    auto* p = proc.apvts.getParameter (IDs::diceMode);
+    p->beginChangeGesture(); p->setValueNotifyingHost (p->convertTo0to1 ((float) face)); p->endChangeGesture();
+    if (dicePad != nullptr) { dicePad->diceFace = face + 1; dicePad->repaintDice(); }
+    userActed = true;
+    const bool everyNote = proc.apvts.getRawParameterValue (IDs::diceNote)->load() > 0.5f;
+    if (everyNote)
+        lcd.setText (juce::String (face + 1) + "  " + mm::lang::tr (names[face]), mm::lang::tr (what[face]));
+    else
+        rollDice (URingAudioProcessor::RandAll, false);
+}
+
+void URingAudioProcessorEditor::toggleDiceEveryNote()
+{
+    auto* p = proc.apvts.getParameter (IDs::diceNote);
+    const bool on = p->getValue() < 0.5f;
+    p->beginChangeGesture(); p->setValueNotifyingHost (on ? 1.0f : 0.0f); p->endChangeGesture();
+    userActed = true;
+    lcd.setText (mm::lang::tr ("DICE ON EVERY NOTE"), on ? juce::String (mm::lang::tr ("ON: EVERY NOTE IS A NEW SOUND")) : juce::String ("OFF"));
+}
+
 void URingAudioProcessorEditor::showDiceMenu()
 {
     using mm::lang::tr;
@@ -1440,15 +1513,7 @@ void URingAudioProcessorEditor::showDiceMenu()
             case 12: rollDice (RS::RandEngineA, true); rollDice (RS::RandEngineB, true); break;
             case 13: rollDice (RS::RandEngineC, true); break;
             case 14: rollDice (RS::RandFx, true); break;
-            case 20:
-            {
-                auto* p = proc.apvts.getParameter (IDs::diceNote);
-                const bool on = p->getValue() < 0.5f;
-                p->beginChangeGesture(); p->setValueNotifyingHost (on ? 1.0f : 0.0f); p->endChangeGesture();
-                userActed = true;
-                lcd.setText (mm::lang::tr ("DICE ON EVERY NOTE"), on ? juce::String (mm::lang::tr ("ON: EVERY NOTE IS A NEW SOUND")) : juce::String ("OFF"));
-                break;
-            }
+            case 20: toggleDiceEveryNote(); break;
             default: break;
         }
     });

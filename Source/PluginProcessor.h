@@ -80,6 +80,9 @@ namespace IDs
     inline constexpr const char* cFeed      = "cFeed";
     inline constexpr const char* cFeedB     = "cFeedB";     // 1.5: el motor C excita al motor B
     inline constexpr const char* diceNote   = "diceNote";   // 1.5: DADO EN CADA NOTA
+    inline constexpr const char* diceMode   = "diceMode";
+    inline constexpr const char* diceTone   = "diceTone";   // TONO del dado (semitonos, automatizable)
+    inline constexpr const char* diceDecay  = "diceDecay";  // CAÍDA del dado (más corto / más largo, automatizable)
     inline constexpr const char* seq2Target = "seq2Target";
     // FX
     inline constexpr const char* glitchOn    = "glitchOn";

@@ -1,4 +1,4 @@
-CCRing @VERSION@ — CCR
+CCRing — CCR
 Sintetizador de modelado físico, gratis y de código libre.
 Para: @ARCH@, macOS 11 o superior.
 

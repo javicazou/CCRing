@@ -25,7 +25,9 @@ Plus:
 - **165 presets** with matched loudness: basses, pads, keys, percussion, drones, textures and sequences.
 - Interface in **English or Spanish** (click the logo → LANGUAGE).
 
-New in **1.5**: a **dice** button (level-matched random sounds, or a new sound on every note), a **MOD lane** in the sequencer (a different engine C model on every step — a whole kit from one sequencer), **engine C as the exciter** of resonator A and **C > B feed**, cables that can be **shown, faded or hidden** (hover a jack to see what is patched), **PREVIEW** in the preset browser, and the sequencer always starts **off** until you press RUN.
+**The dice** (SEQ page, RANDOM module): hold it and **every note — played or from the sequencer — becomes a different sound**: another instrument, another pitch, another length, truly random and level-matched. Click it to roll: each of its **6 faces** is another way of choosing the sounds (Surprise, Percussion, Melody, Atmosphere, Contrast, Mutation). **DICE PITCH** and **DICE DECAY** steer the random sounds live and can be automated.
+
+Also: a **MOD lane** in the sequencer (a different engine C model on every step — a whole kit from one sequencer), **engine C as the exciter** of resonator A and **C > B feed**, cables that can be **shown, faded or hidden**, **PREVIEW** in the preset browser, and the sequencer always starts **off** until you press RUN.
 
 | Sequencer | Engine C (Macro) | Texture |
 |---|---|---|
@@ -64,7 +66,6 @@ Requirements: CMake 3.22+, and Xcode (Mac) or Visual Studio 2022 (Windows). JUCE
 ```
 
 On GitHub, every push to `main` builds Mac and Windows automatically (*Actions → Build → Artifacts*).
-Pushing a tag such as `v1.5.0` publishes a Release with both installers.
 
 ## Licence
 

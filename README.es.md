@@ -23,7 +23,9 @@ Además:
 - **165 presets** con el volumen igualado: bajos, pads, teclados, percusión, drones, texturas y secuencias.
 - Interfaz en **inglés o español** (tocá el logo → IDIOMA).
 
-Novedades de la **1.5**: un **dado** (sonidos al azar con el volumen parejo, o un sonido nuevo en cada nota), carril **MOD** en el secuenciador (otro modelo del motor C en cada paso: una batería entera desde un solo secuenciador), **motor C como excitador** del resonador A y **C > B FEED**, cables que se pueden **mostrar, hacer transparentes u ocultar** (el mouse sobre un jack muestra lo conectado), **ESCUCHAR** en el buscador de presets, y el secuenciador siempre arranca **apagado** hasta que tocás RUN.
+**El dado** (pestaña SEQ, módulo AZAR): mantenelo apretado y **cada nota —tocada o del secuenciador— es otro sonido**: otro instrumento, otra altura, otro largo, azar de verdad y con el volumen parejo. Tocalo para tirarlo: cada una de sus **6 caras** es otra forma de elegir los sonidos (Sorpresa, Percusión, Melodía, Atmósfera, Contraste, Mutación). **TONO** y **CAÍDA** manejan los sonidos al azar en vivo y se pueden automatizar.
+
+Además: carril **MOD** en el secuenciador (otro modelo del motor C en cada paso: una batería entera desde un solo secuenciador), **motor C como excitador** del resonador A y **C > B FEED**, cables que se pueden **mostrar, hacer transparentes u ocultar**, **ESCUCHAR** en el buscador de presets, y el secuenciador siempre arranca **apagado** hasta que tocás RUN.
 
 | Secuenciador | Motor C (Macro) | Texture |
 |---|---|---|
@@ -65,7 +67,7 @@ Requisitos: CMake 3.22+, y Xcode (Mac) o Visual Studio 2022 (Windows). JUCE 8 se
 ```
 
 En GitHub, cada push a `main` compila automáticamente Mac y Windows
-(*Actions → Build → Artifacts*). Al crear un tag `v1.3.0` se publica una Release con los instaladores.
+(*Actions → Build → Artifacts*).
 
 ## Licencia
 

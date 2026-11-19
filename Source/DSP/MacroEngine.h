@@ -97,17 +97,22 @@ private:
             if (gate) lowBlocks = 1;   // la nota que sigue sonando vuelve a disparar con el modelo nuevo
         }
         plaits::Patch patch {};
+        // Entradas saneadas: un NaN o un valor fuera de rango puede colgar algunos modelos de Plaits
+        // (CHIP se quedaba en un bucle sin fin y el DAW decía que el audio no responde)
+        auto unit = [] (float x) { return std::isfinite (x) ? juce::jlimit (0.0f, 1.0f, x) : 0.5f; };
+        auto bip  = [] (float x) { return std::isfinite (x) ? juce::jlimit (-1.0f, 1.0f, x) : 0.0f; };
+        if (! std::isfinite (note)) note = 60.0f;
         // Plaits calcula la afinación para 47872 Hz (su reloj real): se corrige para 48 kHz exactos
-        patch.note = note - 0.0461f;
-        patch.harmonics = p.harmonics;
-        patch.timbre = p.timbre;
-        patch.morph = p.morph;
-        patch.frequency_modulation_amount = p.fm;
-        patch.timbre_modulation_amount = p.timbreMod;
-        patch.morph_modulation_amount = p.morphMod;
-        patch.engine = p.model;
-        patch.decay = p.decay;
-        patch.lpg_colour = p.colour;
+        patch.note = juce::jlimit (-36.0f, 150.0f, note) - 0.0461f;
+        patch.harmonics = unit (p.harmonics);
+        patch.timbre = unit (p.timbre);
+        patch.morph = unit (p.morph);
+        patch.frequency_modulation_amount = bip (p.fm);
+        patch.timbre_modulation_amount = bip (p.timbreMod);
+        patch.morph_modulation_amount = bip (p.morphMod);
+        patch.engine = juce::jlimit (0, 23, p.model);
+        patch.decay = unit (p.decay);
+        patch.lpg_colour = unit (p.colour);
 
        #if ! defined (NDEBUG)
         for (float v : { patch.note, patch.harmonics, patch.timbre, patch.morph, patch.frequency_modulation_amount,
@@ -128,6 +133,7 @@ private:
             main[k] = (float) frames[k].out / 32768.0f;
             aux[k] = (float) frames[k].aux / 32768.0f;
         }
+        if (! std::isfinite (readPos) || readPos > 4.0 * plaits::kBlockSize) readPos = 0.0;
     }
 
     plaits::Voice voice;

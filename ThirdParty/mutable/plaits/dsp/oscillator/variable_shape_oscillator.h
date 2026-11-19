@@ -174,7 +174,11 @@ class VariableShapeOscillator {
       }
       
       slave_phase_ += slave_frequency;
-      while (transition_during_reset || !reset) {
+      // CCRing: a NaN or runaway phase made this loop endless (host audio hang); reset it instead
+      if (!(slave_phase_ >= 0.0f && slave_phase_ < 2.0f)) { slave_phase_ = 0.0f; high_ = false; }
+      if (!(master_phase_ >= 0.0f && master_phase_ < 2.0f)) master_phase_ = 0.0f;
+      int guard = 4;
+      while ((transition_during_reset || !reset) && guard-- > 0) {
         if (!high_) {
           if (slave_phase_ < pw) {
             break;

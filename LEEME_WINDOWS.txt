@@ -1,4 +1,4 @@
-CCRing 1.5.0 - CCR - WINDOWS
+CCRing - CCR - WINDOWS
 
 El plugin para Windows se compila en tu PC (una sola vez, unos 10-15 minutos).
 

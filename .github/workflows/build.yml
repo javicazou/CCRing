@@ -49,7 +49,7 @@ jobs:
         shell: pwsh
         run: |
           $version = (Select-String -Path CMakeLists.txt -Pattern 'project\(CCRing VERSION ([0-9.]+)').Matches[0].Groups[1].Value
-          $out = "CCRing-$version-Windows"
+          $out = "CCRing-Windows"
           New-Item -ItemType Directory -Force -Path $out | Out-Null
           Copy-Item -Recurse "build-win/CCRing_artefacts/Release/VST3/CCRing.vst3" "$out/CCRing.vst3"
           Copy-Item "build-win/CCRing_artefacts/Release/CLAP/CCRing.clap" "$out/CCRing.clap"
@@ -87,16 +87,16 @@ jobs:
           body: |
             **CCRing ${{ github.ref_name }}** — free and open-source physical-modelling synth / sintetizador de modelado físico, gratis y de código libre.
 
-            - **Mac** (Intel & Apple Silicon, macOS 11+): download `CCRing-…-Mac.zip`, open the `.pkg` and read `README.txt`.
-            - **Windows** (10/11, 64-bit): download `CCRing-…-Windows.zip` and run `INSTALAR_PLUGIN.bat` as administrator.
+            - **Mac** (Intel & Apple Silicon, macOS 11+): download `CCRing-Mac.zip`, open the `.pkg` and read `README.txt`.
+            - **Windows** (10/11, 64-bit): download `CCRing-Windows.zip` and run `INSTALAR_PLUGIN.bat` as administrator.
             - Not signed by Apple/Microsoft (it is free): the first time the system warns you; the README explains how to open it.
             - Donations ♥ https://paypal.me/JavierCazou  ·  Mercado Pago (Argentina): alias `nodrama.perro`
 
             ---
 
 
-            - **Mac** (Intel y Apple Silicon, macOS 11+): bajá `CCRing-…-Mac.zip`, abrí el `.pkg` y leé el `LEEME.txt`.
-            - **Windows** (10/11, 64 bits): bajá `CCRing-…-Windows.zip` y ejecutá `INSTALAR_PLUGIN.bat` como administrador.
+            - **Mac** (Intel y Apple Silicon, macOS 11+): bajá `CCRing-Mac.zip`, abrí el `.pkg` y leé el `LEEME.txt`.
+            - **Windows** (10/11, 64 bits): bajá `CCRing-Windows.zip` y ejecutá `INSTALAR_PLUGIN.bat` como administrador.
 
             CCRing no está firmado por Apple ni Microsoft (es gratuito): la primera vez el sistema avisa; en el LEEME está cómo abrirlo.
             Si te gusta, podés apoyarlo con una donación ♥ en https://paypal.me/JavierCazou o por Mercado Pago al alias `nodrama.perro` (o desde el plugin: logo de CCRing → DONATE).

@@ -35,3 +35,4 @@ URing modifications: plaits/dsp/speech/lpc_speech_synth_controller.cc clamps the
 URing modifications: clouds/dsp/grain.h initializes recommended_quality_ in Init() (read before the first Start()).
 URing modifications: clouds/dsp/granular_processor.cc zeroes the feedback buffer in Init() and drops non-finite / runaway samples before feedback.
 URing modifications: clouds/dsp/fx/fx_engine.h clamps values before the float-to-int conversion in Compress() (undefined behaviour on overflow).
+CCRing modifications: plaits/dsp/oscillator/super_square_oscillator.h and variable_shape_oscillator.h sanitize frequency/phase and bound the transition loop (a NaN input made it endless and hung the host audio thread).

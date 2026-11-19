@@ -118,7 +118,7 @@ func beginPage(_ title: String, _ kicker: String, colour: NSColor = orange) {
     // pie
     ctx.setFillColor(NSColor(calibratedWhite: 1, alpha: 0.08).cgColor); ctx.fill(CGRect(x: M, y: 34, width: W - 2 * M, height: 0.6))
     drawLogo(CGRect(x: M, y: 16, width: 26, height: 15))
-    line("CCRING 1.5  ·  CCR", font: mont(6.5), color: dim, at: CGPoint(x: M + 32, y: 22), kern: 1.4)
+    line("CCRING  ·  CCR", font: mont(6.5), color: dim, at: CGPoint(x: M + 32, y: 22), kern: 1.4)
     line("\(pageNo)", font: mont(7), color: dim, at: CGPoint(x: W - M - 8, y: 22))
 }
 func endPage() { ctx.endPDFPage() }
@@ -136,14 +136,14 @@ ctx.beginPDFPage(nil)
 ctx.setFillColor(bg.cgColor); ctx.fill(mediaBox)
 drawLogo(CGRect(x: M - 6, y: H - 142, width: 100, height: 58))   // logo de CCR
 line("CCRING", font: mont(54), color: .white, at: CGPoint(x: M + 104, y: H - 130), kern: 12)
-line("MANUAL  ·  VERSION 1.5", font: mont(11), color: orange, at: CGPoint(x: M + 2, y: H - 162), kern: 3)
+line("MANUAL", font: mont(11), color: orange, at: CGPoint(x: M + 2, y: H - 162), kern: 3)
 line("Physical-modelling instrument + 24 synthesis models, with a sequencer built for minimal house", font: body(11.5), color: dim, at: CGPoint(x: M + 2, y: H - 182))
 drawShot("look_macro.png", top: 215)
 drawText(styled("""
 ## What is CCRing
 CCRing is an instrument that **uses no samples**: every note strikes, plucks, bows or blows simulated objects — strings, wood, metal, drum skins — and sounds the way that object would. It has **three engines**: A (resonator), B (impact) and C (ENGINE C, 24 synthesis models), two Euclidean sequencers, studio effects, a granular TEXTURE page and a page for playing live.
 ## How to read this manual
-One page per tab: **SYNTH, FX, SEQ, LIVE, ENGINE C and TEXTURE**, plus presets, motion recording and tips for minimal / rominimal. Words in CAPITALS are the names you see in the plugin. CCRing can also be shown in Spanish: click the CCRing logo and choose **ESPAÑOL** under LANGUAGE.
+One page per tab: **SYNTH, FX, SEQ, LIVE, ENGINE C and TEXTURE**, plus **the dice**, presets, motion recording and tips for minimal / rominimal. Words in CAPITALS are the names you see in the plugin. CCRing can also be shown in Spanish: click the CCRing logo and choose **ESPAÑOL** under LANGUAGE.
 """, size: 10.5), in: CGRect(x: M, y: 60, width: W - 2 * M, height: 230))
 line("CCR", font: mont(8), color: dim, at: CGPoint(x: M, y: 30), kern: 2)
 ctx.endPDFPage()
@@ -161,7 +161,7 @@ columns("""
 - **Logo:** credits, shortcuts, donations and **language** (English / Español).
 - **SYNTH · FX · SEQ · LIVE · ENGINE C · TEXTURE:** the six pages.
 - **List icon:** opens the **preset browser** (Cmd+F).
-- **< name >:** previous / next preset / menu. **Dice:** a new random, level-matched sound (right-click: what to randomize, vary, or **a new sound on every note**).
+- **< name >:** previous / next preset / menu. The **dice** lives on the SEQ page, RANDOM module (see the dice page).
 """, """
 - **Curved arrows:** **undo / redo** (Cmd+Z / Cmd+Shift+Z), up to 100 steps: knobs, steps, cables and presets.
 - **SAVE:** stores your version as a user preset. An **asterisk *** means you changed something; the original is never overwritten.
@@ -245,6 +245,35 @@ A second pattern, on another track of the same plugin: **SEQ 2 ON**, **DIVISION*
 """, top: 88 + hq + 14)
 endPage()
 
+// ==================================================================== DICE
+beginPage("The dice", "every note, another sound · SEQ page, RANDOM module")
+let hd = drawShot("look_dice.png", top: 88, width: 300, crop: CGRect(x: 576, y: 64, width: 282, height: 272))
+columns("""
+## How to use it
+- **Hold it** (half a second, a small bar fills up): turns **every note a different sound** on or off. When it is on the dice turns orange and every note — played or from the sequencer — comes out with another instrument, another pitch and another length. It is truly random: it follows no pattern.
+- **Click with the mode on:** you roll the dice. It spins, lands on another face and from the next note the sounds are chosen with another logic. The display shows which.
+- **Click with the mode off:** a new random sound for the whole preset, level-matched.
+- **Right-click:** what to randomize (engine A, B, C, effects or modulation) or a small **variation** of the current sound.
+## The 6 faces
+- **1 SURPRISE:** any family, never the same twice in a row.
+- **2 PERCUSSION:** drums, wood and short plucks.
+- **3 MELODY:** pitched sounds only.
+- **4 ATMOSPHERE:** pads, textures and long bells.
+- **5 CONTRAST:** short, long, short, long…
+- **6 MUTATION:** stays in one family and changes little by little; now and then it jumps to another.
+""", """
+## The families
+**Pluck** (string, piano, tine), **bell** and metal, **pad** (bow or breath), **drums** (kick, snare, hi-hat), **synth** (oscillators with a filter), **wood** and skin (marimba, mbira, hand drum) and **texture** (grains, swarm, voice). Every note also jumps an octave or a fifth and changes length: dry, normal, sustained or with a slow attack. All families play at an even level.
+## PITCH and DECAY
+- **DICE PITCH:** moves the dice sounds up or down (±2 octaves, in semitones).
+- **DICE DECAY:** centre = as they come; left = dry hits; right = they keep ringing.
+- Both work **live**, also on notes that are already sounding. Automate them in Ableton (**Dice Pitch** and **Dice Decay**) or record them with **REC**. **Dice Every Note** (on / off) and **Dice Logic** (the face) can be automated too.
+## Good to know
+- With the dice on, the preset's filter, envelope and models don't rule: every note replaces them. The effects still apply.
+- Every pass sounds different, also when exporting: if you like a result, record the audio.
+""", top: 88 + hd + 14)
+endPage()
+
 // ==================================================================== TEXTURE
 beginPage("TEXTURE", "granular, plate reverb and output", colour: green)
 let ht = drawShot("look_texture.png", top: 88)
@@ -306,7 +335,7 @@ columns("""
 - **C > B FEED:** the same for the engine B object (bar, plate, gong).
 - **SEQ 2 PLAYS:** the second sequencer plays engine B, C, or both.
 ## Presets
-29 presets in **Macro** plus 12 new ones in 1.5: **Model Hopper**, **Plaits Kit Walk**, **FM Struck String**, **Gong Driven**…
+29 presets in **Macro**, among them **Model Hopper**, **Plaits Kit Walk**, **FM Struck String**, **Gong Driven**…
 """, top: 88 + hm + 14)
 endPage()
 
@@ -320,7 +349,7 @@ columns("""
 - Right-click REC: list of what was recorded and clear. It is saved with your Ableton project.
 ## Presets
 - Factory presets never change. **SAVE** creates a user preset (in Music > CCRing > Presets) shown in the **USER** category of the browser.
-- Exporting or freezing in Ableton always gives **exactly the same audio**.
+- Exporting or freezing in Ableton always gives **exactly the same audio** (except with the dice on: that randomness never repeats).
 ## In Ableton
 - One instance per sound; with **MIDI OUT** you can record the sequencer notes on another track.
 - Automate **MORPH** and **SPACE** with the X/Y pad for long changes.
@@ -330,7 +359,7 @@ columns("""
 - Use different **STEPS** in SEQ 1 and SEQ 2 (16 and 7, 16 and 12): the patterns drift apart and never repeat the same way.
 - **PROB** at 70 % and a little **MUTATE** make the loop live on its own.
 - Use **LOCK** on engine C TIMBRE so every hit has a different colour.
-- Turn on **dice on every note** while the sequencer plays: every hit is a different instrument, great for percussion that never repeats.
+- **Hold the dice** while the sequencer plays: every hit is a different instrument. Try the **PERCUSSION** face for percussion that never repeats.
 - **Plaits Kit Walk** builds a whole kit with the **MOD** lane: kick, hats and snare from one sequencer.
 - **Kick Into Modal** and **Modal Into Strings** show C > A FEED: a synthetic hit making a real object ring.
 - Leave the volume at −20 dB and raise it on the Ableton mixer, so delay and reverb never clip.

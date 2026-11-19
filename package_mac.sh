@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 #  CCRing — instalador para macOS (sin firma de Apple: proyecto libre y gratuito)
-#  Genera dist/CCRing-<versión>-Mac.pkg (VST3 + AU + app Standalone) y un .zip
+#  Genera dist/CCRing-Mac.pkg (VST3 + AU + app Standalone) y un .zip
 #  para compartir con el instalador, los manuales (EN/ES), la licencia y "Allow CCRing.command".
 #
 #  Uso:  ./package_mac.sh            Universal: Intel + Apple Silicon (usa build-universal/)
@@ -31,7 +31,7 @@ die() { printf '\033[1;31m ✗ %s\033[0m\n' "$*" >&2; exit 1; }
 JUCE_ARGS=()
 [[ -d "$PROJECT_DIR/../build/_deps/juce-src/modules" ]] && JUCE_ARGS=(-DFETCHCONTENT_SOURCE_DIR_JUCE="$(cd "$PROJECT_DIR/../build/_deps/juce-src" && pwd)")
 GEN=(); command -v ninja >/dev/null && GEN=(-G Ninja)
-log "Compilando $NAME $VERSION (Release, $ARCHS)…"
+log "Compilando $NAME (Release, $ARCHS)…"
 cmake -S "$PROJECT_DIR" -B "$BUILD_DIR" "${GEN[@]+"${GEN[@]}"}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="$ARCHS" \
       -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 "${JUCE_ARGS[@]+"${JUCE_ARGS[@]}"}" >/dev/null
 cmake --build "$BUILD_DIR" --config Release --target "${NAME}_VST3" "${NAME}_AU" "${NAME}_CLAP" "${NAME}_Standalone" >/dev/null
@@ -96,7 +96,7 @@ ES="$WORK/resources/es.lproj"; EN="$WORK/resources/en.lproj"; mkdir -p "$ES" "$E
 ARCH_EN="$( [[ "$ARCH_LABEL" == "Mac" ]] && echo "any Mac (<b>Intel or Apple Silicon M1/M2/M3/M4</b>)" || echo "a Mac with an <b>Intel</b> processor")"
 cat > "$ES/welcome.html" <<EOF
 <html><body style="font-family: -apple-system, Helvetica; font-size: 13px">
-<h2>CCRing $VERSION</h2>
+<h2>CCRing</h2>
 <p>Sintetizador de modelado físico de <b>CCR</b> — <b>gratis y de código libre</b>.</p>
 <p>CCRing es la nueva versión de <b>URing</b>: si tenés URing instalado, lo reemplaza (tus proyectos lo abren con CCRing).</p>
 <p>Se instalará para todos los usuarios de este Mac:</p>
@@ -113,7 +113,7 @@ CCRing arranca en inglés: para pasarlo a español tocá el logo → LANGUAGE �
 EOF
 cat > "$EN/welcome.html" <<EOF
 <html><body style="font-family: -apple-system, Helvetica; font-size: 13px">
-<h2>CCRing $VERSION</h2>
+<h2>CCRing</h2>
 <p>Physical-modelling synth by <b>CCR</b> — <b>free and open source</b>.</p>
 <p>CCRing is the new version of <b>URing</b>: if URing is installed, it is replaced (your projects open with CCRing).</p>
 <p>It will be installed for all users of this Mac:</p>
@@ -168,12 +168,12 @@ EOF
 
 # 3. Instalador
 mkdir -p "$DIST_DIR"
-PKG="$DIST_DIR/$NAME-$VERSION-$ARCH_LABEL.pkg"
+PKG="$DIST_DIR/$NAME-$ARCH_LABEL.pkg"
 log "Creando ${PKG}…"
 cat > "$WORK/distribution.xml" <<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
-  <title>CCRing $VERSION</title>
+  <title>CCRing</title>
   <background file="installer_logo.png" alignment="bottomleft" scaling="none"/>
   <background-darkAqua file="installer_logo.png" alignment="bottomleft" scaling="none"/>
   <welcome file="welcome.html"/>
@@ -214,7 +214,7 @@ sed -e "s|@VERSION@|$VERSION|g" -e "s|@PKG@|$(basename "$PKG")|g" \
 sed -e "s|@VERSION@|$VERSION|g" -e "s|@PKG@|$(basename "$PKG")|g" \
     -e "s|@ARCH_EN@|$( [[ "$ARCH_LABEL" == "Mac" ]] && echo "Intel or Apple Silicon Mac (M1/M2/M3/M4)" || echo "Intel Mac")|g" \
     "$PROJECT_DIR/mac/README.txt" > "$Z/README.txt"
-ZIP="$DIST_DIR/$NAME-$VERSION-$ARCH_LABEL.zip"
+ZIP="$DIST_DIR/$NAME-$ARCH_LABEL.zip"
 rm -f "$ZIP"
 ( cd "$Z" && COPYFILE_DISABLE=1 zip -q -X -r "$ZIP" . )
 [[ "${ICON_OK:-0}" == 1 ]] && "$WORK/seticon" "$PROJECT_DIR/Resources/ccr_app_icon_1024.png" "$PKG" "$ZIP" >/dev/null

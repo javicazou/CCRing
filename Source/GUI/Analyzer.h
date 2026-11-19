@@ -404,7 +404,7 @@ public:
         r.removeFromTop (44.0f);
         g.setColour (Palette::dim);
         g.setFont (uiFont (11.0f).withExtraKerningFactor (0.2f));
-        g.drawText (String::fromUTF8 (mm::lang::spanish() ? "CCR   \xc2\xb7   VERSI\xc3\x93N " : "CCR   \xc2\xb7   VERSION ") + URING_VERSION,
+        g.drawText (String::fromUTF8 (mm::lang::spanish() ? "CCR   \xc2\xb7   SINTE DE MODELADO F\xc3\x8dSICO" : "CCR   \xc2\xb7   PHYSICAL-MODELLING SYNTH"),
                     r.removeFromTop (18.0f).withTrimmedLeft (96.0f), Justification::centredLeft);
 
         // Idioma: ENGLISH / ESPAÑOL (se guarda para todas las ventanas de URing)

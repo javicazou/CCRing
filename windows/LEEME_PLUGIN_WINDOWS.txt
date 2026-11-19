@@ -1,4 +1,4 @@
-CCRing @VERSION@ - CCR - WINDOWS (64 bits, Windows 10/11)
+CCRing - CCR - WINDOWS (64 bits, Windows 10/11)
 
 INSTALAR
 1. Descomprime este zip.

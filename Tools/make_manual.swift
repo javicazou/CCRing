@@ -117,7 +117,7 @@ func beginPage(_ title: String, _ kicker: String, colour: NSColor = orange) {
     // pie
     ctx.setFillColor(NSColor(calibratedWhite: 1, alpha: 0.08).cgColor); ctx.fill(CGRect(x: M, y: 34, width: W - 2 * M, height: 0.6))
     drawLogo(CGRect(x: M, y: 16, width: 26, height: 15))
-    line("CCRING 1.5  ·  CCR", font: mont(6.5), color: dim, at: CGPoint(x: M + 32, y: 22), kern: 1.4)
+    line("CCRING  ·  CCR", font: mont(6.5), color: dim, at: CGPoint(x: M + 32, y: 22), kern: 1.4)
     line("\(pageNo)", font: mont(7), color: dim, at: CGPoint(x: W - M - 8, y: 22))
 }
 func endPage() { ctx.endPDFPage() }
@@ -135,14 +135,14 @@ ctx.beginPDFPage(nil)
 ctx.setFillColor(bg.cgColor); ctx.fill(mediaBox)
 drawLogo(CGRect(x: M - 6, y: H - 142, width: 100, height: 58))   // logo de CCR
 line("CCRING", font: mont(54), color: .white, at: CGPoint(x: M + 104, y: H - 130), kern: 12)
-line("MANUAL  ·  VERSIÓN 1.5", font: mont(11), color: orange, at: CGPoint(x: M + 2, y: H - 162), kern: 3)
+line("MANUAL", font: mont(11), color: orange, at: CGPoint(x: M + 2, y: H - 162), kern: 3)
 line("Instrumento de modelado físico + 24 modelos de síntesis, con secuenciador para minimal house", font: body(11.5), color: dim, at: CGPoint(x: M + 2, y: H - 182))
 drawShot("look_macro.png", top: 215)
 drawText(styled("""
 ## Qué es CCRing
 CCRing es un instrumento que **no usa samples**: cada nota golpea, pulsa, frota o sopla objetos simulados — cuerdas, maderas, metales, parches — y suena como sonaría ese objeto. Tiene **tres motores**: A (resonador), B (impacto) y C (MOTOR C, 24 modelos de síntesis), dos secuenciadores euclidianos, efectos de estudio y una página para tocar en vivo.
 ## Cómo leer este manual
-Una página por pestaña: **SYNTH, FX, SEQ, LIVE, ENGINE C y TEXTURE** (en español: SINTE, FX, SEQ, VIVO, MOTOR C y TEXTURA), más presets, grabación de movimientos y consejos para minimal / rominimal. Las palabras en MAYÚSCULAS son los nombres que ves en el plugin, que viene en inglés: si lo preferís en español, tocá el logo de CCRing y elegí **ESPAÑOL** en IDIOMA.
+Una página por pestaña: **SYNTH, FX, SEQ, LIVE, ENGINE C y TEXTURE** (en español: SINTE, FX, SEQ, VIVO, MOTOR C y TEXTURA), más **el dado**, presets, grabación de movimientos y consejos para minimal / rominimal. Las palabras en MAYÚSCULAS son los nombres que ves en el plugin, que viene en inglés: si lo preferís en español, tocá el logo de CCRing y elegí **ESPAÑOL** en IDIOMA.
 """, size: 10.5), in: CGRect(x: M, y: 60, width: W - 2 * M, height: 230))
 line("CCR", font: mont(8), color: dim, at: CGPoint(x: M, y: 30), kern: 2)
 ctx.endPDFPage()
@@ -160,7 +160,7 @@ columns("""
 - **Logo:** abre los créditos, los atajos, las donaciones y el **idioma** (English / Español).
 - **SYNTH · FX · SEQ · LIVE · ENGINE C · TEXTURE:** las seis páginas (en español: SINTE · FX · SEQ · VIVO · MOTOR C · TEXTURA).
 - **Lista:** abre el **buscador de presets** (Cmd+F).
-- **< nombre >:** preset anterior / siguiente / menú. **Dado:** un sonido nuevo al azar con el volumen parejo (clic derecho: qué sortear, variar, o **un sonido nuevo en cada nota**).
+- **< nombre >:** preset anterior / siguiente / menú. El **dado** está en la pestaña SEQ, módulo AZAR (ver la página del dado).
 """, """
 - **Flechas curvas:** **deshacer / rehacer** (Cmd+Z / Cmd+Shift+Z), hasta 100 pasos: perillas, pasos, cables y presets.
 - **SAVE:** guarda tu versión como preset de usuario. Un **asterisco *** indica que tocaste algo; el original nunca se pisa.
@@ -244,6 +244,36 @@ Un segundo dibujo, en otra pista del mismo plugin: **SEQ 2 ON**, **DIVISION**, *
 """, top: 88 + hq + 14)
 endPage()
 
+// ==================================================================== DADO
+beginPage("El dado", "cada nota, otro sonido · pestaña SEQ, módulo AZAR")
+let hd = drawShot("look_dice.png", top: 88, width: 300, crop: CGRect(x: 576, y: 64, width: 282, height: 272))
+columns("""
+## Cómo se usa
+El dado es el botón **SORTEAR** (ROLL).
+- **Mantener apretado** (medio segundo, se llena una barrita): prende o apaga **cada nota es otro sonido**. Prendido, el dado se pone naranja y cada nota —tocada o del secuenciador— sale con otro instrumento, otra altura y otro largo. Es azar de verdad: no sigue ningún patrón.
+- **Un toque con el modo prendido:** tirás el dado. Gira, cae en otra cara y desde la nota siguiente los sonidos se eligen con otra lógica. La pantalla muestra cuál.
+- **Un toque con el modo apagado:** un sonido nuevo al azar para todo el preset, con el volumen parejo.
+- **Clic derecho:** qué sortear (motor A, B, C, efectos o modulación) o una **variación** chica del sonido actual.
+## Las 6 caras
+- **1 SORPRESA** (SURPRISE)**:** cualquier familia, nunca dos iguales seguidas.
+- **2 PERCUSIÓN** (PERCUSSION)**:** batería, madera y punteados cortos.
+- **3 MELODÍA** (MELODY)**:** solo sonidos con nota.
+- **4 ATMÓSFERA** (ATMOSPHERE)**:** pads, texturas y campanas largas.
+- **5 CONTRASTE** (CONTRAST)**:** corto, largo, corto, largo…
+- **6 MUTACIÓN** (MUTATION)**:** se queda en una familia y cambia de a poco; cada tanto salta a otra.
+""", """
+## Las familias
+**Punteado** (cuerda, piano, tine), **campana** y metal, **pad** (arco o soplido), **batería** (bombo, redoblante, hi-hat), **sinte** (osciladores con filtro), **madera** y parche (marimba, mbira, tambor de mano) y **textura** (granos, enjambre, voz). Cada nota además salta de octava o de quinta y cambia de largo: seca, normal, sostenida o con entrada lenta. Todas las familias suenan con el volumen parejo.
+## TONO y CAÍDA
+- **TONO** (DICE PITCH)**:** sube o baja la altura de los sonidos del dado (±2 octavas, de a semitono).
+- **CAÍDA** (DICE DECAY)**:** al centro, como salen; a la izquierda, golpes secos; a la derecha, quedan sonando.
+- Las dos actúan **en vivo**, también sobre notas que ya suenan. Se automatizan en Ableton (**Dice Pitch** y **Dice Decay**) y se graban con **REC**. También se automatizan **Dice Every Note** (prendido / apagado) y **Dice Logic** (la cara).
+## Para tener en cuenta
+- Con el dado prendido, el filtro, la envolvente y los modelos del preset no mandan: cada nota los reemplaza. Los efectos sí siguen.
+- Cada pasada suena distinta, también al exportar: si te gusta un resultado, grabá el audio.
+""", top: 88 + hd + 14)
+endPage()
+
 // ==================================================================== TEXTURE
 beginPage("TEXTURE", "granular, plate reverb y salida", colour: green)
 let ht = drawShot("look_texture.png", top: 88)
@@ -305,7 +335,7 @@ columns("""
 - **C > B FEED:** lo mismo con el objeto del motor B (barra, placa, gong).
 - **SEQ 2 PLAYS:** el segundo secuenciador toca el motor B, el C, o los dos.
 ## Presets
-29 presets en **Macro** y 12 nuevos de la 1.5: **Model Hopper**, **Plaits Kit Walk**, **FM Struck String**, **Gong Driven**…
+29 presets en **Macro**, entre ellos **Model Hopper**, **Plaits Kit Walk**, **FM Struck String**, **Gong Driven**…
 """, top: 88 + hm + 14)
 endPage()
 
@@ -319,7 +349,7 @@ columns("""
 - Clic derecho en REC: lista de lo grabado y borrar. Se guarda con el proyecto de Ableton.
 ## Presets
 - Los de fábrica nunca cambian. **SAVE** crea uno de usuario (en Música > CCRing > Presets) y aparece en la categoría **USER** del buscador.
-- Exportar o congelar en Ableton da **siempre el mismo audio**.
+- Exportar o congelar en Ableton da **siempre el mismo audio** (salvo con el dado prendido: ese azar nunca se repite).
 ## En Ableton
 - Una instancia por sonido; con **MIDI OUT** grabás las notas del secuenciador en otra pista.
 - Automatizá **MORPH** y **SPACE** con el pad X/Y para los cambios largos.
@@ -329,7 +359,7 @@ columns("""
 - Poné **STEPS** distintos en SEQ 1 y SEQ 2 (16 y 7, 16 y 12): el dibujo se desfasa y nunca se repite igual.
 - **PROB** al 70 % y **MUTATE** bajo hacen que el loop viva solo.
 - Usá **LOCK** en TIMBRE del motor C para que cada golpe tenga otro color.
-- Prendé el **dado en cada nota** con el secuenciador sonando: cada golpe es otro instrumento, ideal para percusiones que nunca se repiten.
+- **Mantené apretado el dado** con el secuenciador sonando: cada golpe es otro instrumento. Probá la cara **PERCUSIÓN** para percusiones que nunca se repiten.
 - **Plaits Kit Walk** arma una batería entera con el carril **MOD**: bombo, hats y snare en un solo secuenciador.
 - **Kick Into Modal** y **Modal Into Strings** muestran el C > A FEED: un golpe sintético haciendo sonar un objeto real.
 - Dejá el volumen en −20 dB y subí en el mixer de Ableton: así el delay y la reverb no saturan.
